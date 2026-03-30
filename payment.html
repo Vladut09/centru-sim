@@ -1,401 +1,560 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ro">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Payment - EvalPrep</title>
+  <title>Plată — EvalPrep</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f7f4', 100: '#d9ede2', 200: '#b5dbc7', 300: '#85c2a4',
+              400: '#56a57e', 500: '#368763', 600: '#276c4f', 700: '#205741',
+              800: '#1c4635', 900: '#183a2d', 950: '#0c2019',
+            },
+            surface: { 50: '#fafbfc', 100: '#f3f5f7', 200: '#e8ecf0', 300: '#d5dbe3', 400: '#a8b3c0' },
+            accent: { warm: '#e8985e', warmLight: '#fdf3eb', sky: '#4a9eca', skyLight: '#edf6fb' }
+          },
+          fontFamily: {
+            display: ['"DM Serif Display"', 'serif'],
+            body: ['"Inter"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap');
-    body { font-family: 'Sora', sans-serif; }
-    .card-hover { transition: all 0.3s ease; }
-    .card-hover:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.15); }
-    .badge-success { @apply bg-emerald-50 text-emerald-700 border border-emerald-200; }
-    .badge-active { @apply bg-blue-50 text-blue-700 border border-blue-200; }
+    * { font-family: 'Inter', sans-serif; }
+    h1, h2, h3, .font-display { font-family: 'DM Serif Display', serif; }
+
+    .grain { position: relative; }
+    .grain::before {
+      content: ''; position: absolute; inset: 0; opacity: 0.3; pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+    }
+
+    .card-elevated {
+      box-shadow: 0 1px 3px rgba(54,135,99,0.04), 0 4px 14px rgba(54,135,99,0.06);
+      transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.25s ease;
+    }
+    .card-elevated:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 12px rgba(54,135,99,0.08), 0 12px 28px rgba(54,135,99,0.10);
+    }
+
+    .method-card { transition: border-color 0.2s ease, background-color 0.2s ease; }
+    .method-card.active { border-color: #368763; background-color: #f0f7f4; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeUp 0.5s ease forwards; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { animation: spin 0.8s linear infinite; }
   </style>
 </head>
-<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen">
-  <div class="max-w-6xl mx-auto px-4 py-12">
+<body class="bg-surface-50 min-h-screen grain">
+  <!-- Background blobs -->
+  <div class="fixed inset-0 pointer-events-none overflow-hidden">
+    <div class="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-brand-100/25 blur-3xl"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-accent-warmLight/30 blur-3xl"></div>
+  </div>
+
+  <div class="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
     <!-- Header -->
-    <div class="text-center mb-12">
-      <div class="flex items-center justify-between mb-8">
-        <a href="/" class="text-slate-600 hover:text-slate-900 font-medium">← Back</a>
-        <h1 class="text-4xl font-bold text-slate-900">Choose Your Plan</h1>
-        <div id="userGreeting" class="text-sm text-slate-600"></div>
-      </div>
-      <p class="text-lg text-slate-600">Select the plan that best fits your needs. Upgrade or downgrade anytime.</p>
+    <div class="flex items-center justify-between mb-8 sm:mb-12">
+      <a href="/" class="flex items-center gap-2 text-brand-600 hover:text-brand-800 font-medium text-sm transition-colors duration-200">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        Înapoi
+      </a>
+      <div id="userGreeting" class="text-sm text-surface-400"></div>
     </div>
 
-    <!-- Tier Selection Cards -->
-    <div class="grid md:grid-cols-3 gap-6 mb-12">
-      <!-- Free Tier -->
-      <div class="card-hover rounded-xl border-2 border-slate-200 p-8 bg-white relative" id="tierCard_free">
-        <div class="absolute top-4 right-4" id="freeBadge"></div>
-        <h2 class="text-2xl font-bold text-slate-900 mb-2">Free</h2>
-        <p class="text-slate-600 mb-6">Get started with essential features</p>
+    <div class="text-center max-w-2xl mx-auto mb-10 sm:mb-14 fade-in">
+      <span class="inline-block text-xs sm:text-sm font-semibold text-brand-600 uppercase tracking-wider mb-3">Plată</span>
+      <h1 class="font-display text-3xl sm:text-4xl text-brand-950 mb-3" style="letter-spacing:-0.03em;">Alege planul potrivit</h1>
+      <p class="text-gray-500 text-base sm:text-lg" style="line-height:1.7;">Selectează planul dorit și metoda de plată preferată.</p>
+    </div>
 
-        <div class="mb-8">
-          <span class="text-4xl font-bold text-slate-900">$0</span>
-          <span class="text-slate-600 ml-2">/month</span>
+    <!-- Tier Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-5xl mx-auto mb-10 sm:mb-14">
+      <!-- Free -->
+      <div class="tier-card fade-in card-elevated rounded-2xl p-5 sm:p-7 bg-white border-2 border-surface-200/60 cursor-pointer" data-tier="free" id="tierCard_free">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="font-display text-xl text-brand-900">Gratuit</h3>
+          <span id="freeBadge" class="text-xs font-semibold px-3 py-1 rounded-full"></span>
         </div>
-
+        <div class="flex items-baseline gap-1 mb-1">
+          <span class="text-4xl font-bold text-brand-950">0</span>
+          <span class="text-gray-400 text-lg">lei</span>
+        </div>
+        <p class="text-gray-400 text-sm mb-6">Pentru a testa platforma</p>
         <ul class="space-y-3 mb-8">
-          <li class="flex items-start">
-            <svg class="w-5 h-5 text-emerald-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-            </svg>
-            <span class="text-slate-700">2 free simulations</span>
+          <li class="flex items-start gap-2.5">
+            <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+            <span class="text-gray-600 text-sm">3 simulări / lună</span>
           </li>
-          <li class="flex items-start">
-            <svg class="w-5 h-5 text-emerald-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-            </svg>
-            <span class="text-slate-700">Basic analytics</span>
+          <li class="flex items-start gap-2.5">
+            <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+            <span class="text-gray-600 text-sm">Corectare instantanee</span>
           </li>
-          <li class="flex items-start">
-            <svg class="w-5 h-5 text-emerald-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-            </svg>
-            <span class="text-slate-700">Community support</span>
+          <li class="flex items-start gap-2.5">
+            <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+            <span class="text-gray-600 text-sm">Statistici de bază</span>
           </li>
         </ul>
-
-        <button class="selectTierBtn w-full py-3 rounded-lg font-semibold transition-all"
-                data-tier="free" id="btn_free">
-          Select Plan
+        <button class="select-tier-btn w-full py-3 text-sm font-semibold rounded-xl border border-brand-200 text-brand-700 hover:bg-brand-50 active:bg-brand-100 transition-colors duration-200 focus-visible:outline-none" data-tier="free">
+          Selectează
         </button>
       </div>
 
-      <!-- Premium Tier -->
-      <div class="card-hover rounded-xl border-2 border-blue-300 p-8 bg-white relative ring-2 ring-blue-100" id="tierCard_premium">
-        <div class="absolute top-4 right-4 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold">POPULAR</div>
-        <h2 class="text-2xl font-bold text-slate-900 mb-2">Premium</h2>
-        <p class="text-slate-600 mb-6">For serious learners</p>
-
-        <div class="mb-8">
-          <span class="text-4xl font-bold text-slate-900">$9.99</span>
-          <span class="text-slate-600 ml-2">/month</span>
+      <!-- Standard -->
+      <div class="tier-card fade-in relative card-elevated rounded-2xl p-5 sm:p-7 bg-white border-2 border-brand-500 cursor-pointer" data-tier="standard" id="tierCard_standard" style="animation-delay:0.1s">
+        <div class="absolute -top-3.5 left-1/2 -translate-x-1/2">
+          <span class="px-4 py-1 rounded-full bg-brand-500 text-white text-xs font-semibold">Cel mai popular</span>
         </div>
-
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="font-display text-xl text-brand-900">Standard</h3>
+          <span id="standardBadge" class="text-xs font-semibold px-3 py-1 rounded-full"></span>
+        </div>
+        <div class="flex items-baseline gap-1 mb-1">
+          <span class="text-4xl font-bold text-brand-950">49</span>
+          <span class="text-gray-400 text-lg">lei / lună</span>
+        </div>
+        <p class="text-gray-400 text-sm mb-6">Pentru pregătire serioasă</p>
         <ul class="space-y-3 mb-8">
-          <li class="flex items-start">
-            <svg class="w-5 h-5 text-emerald-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-            </svg>
-            <span class="text-slate-700">Unlimited simulations</span>
+          <li class="flex items-start gap-2.5">
+            <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+            <span class="text-gray-600 text-sm">Simulări nelimitate</span>
           </li>
-          <li class="flex items-start">
-            <svg class="w-5 h-5 text-emerald-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-            </svg>
-            <span class="text-slate-700">Advanced analytics</span>
+          <li class="flex items-start gap-2.5">
+            <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+            <span class="text-gray-600 text-sm">Feedback detaliat cu explicații</span>
           </li>
-          <li class="flex items-start">
-            <svg class="w-5 h-5 text-emerald-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-            </svg>
-            <span class="text-slate-700">Email support</span>
+          <li class="flex items-start gap-2.5">
+            <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+            <span class="text-gray-600 text-sm">Statistici avansate</span>
           </li>
-          <li class="flex items-start">
-            <svg class="w-5 h-5 text-emerald-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-            </svg>
-            <span class="text-slate-700">Progress tracking</span>
+          <li class="flex items-start gap-2.5">
+            <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+            <span class="text-gray-600 text-sm">Teste personalizate</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+            <span class="text-gray-600 text-sm">Clasament național</span>
           </li>
         </ul>
-
-        <button class="selectTierBtn w-full py-3 rounded-lg font-semibold transition-all bg-blue-500 text-white hover:bg-blue-600"
-                data-tier="premium" id="btn_premium">
-          Select Plan
+        <button class="select-tier-btn w-full py-3 text-sm font-semibold rounded-xl text-white bg-brand-500 hover:bg-brand-600 active:bg-brand-700 transition-colors duration-200 focus-visible:outline-none" data-tier="standard">
+          Selectează
         </button>
       </div>
 
-      <!-- Pro Tier -->
-      <div class="card-hover rounded-xl border-2 border-slate-200 p-8 bg-white relative" id="tierCard_pro">
-        <div class="absolute top-4 right-4" id="proBadge"></div>
-        <h2 class="text-2xl font-bold text-slate-900 mb-2">Pro</h2>
-        <p class="text-slate-600 mb-6">For dedicated professionals</p>
-
-        <div class="mb-8">
-          <span class="text-4xl font-bold text-slate-900">$29.99</span>
-          <span class="text-slate-600 ml-2">/month</span>
+      <!-- Premium -->
+      <div class="tier-card fade-in card-elevated rounded-2xl p-5 sm:p-7 bg-white border-2 border-surface-200/60 cursor-pointer" data-tier="premium" id="tierCard_premium" style="animation-delay:0.2s">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="font-display text-xl text-brand-900">Premium</h3>
+          <span id="premiumBadge" class="text-xs font-semibold px-3 py-1 rounded-full"></span>
         </div>
-
+        <div class="flex items-baseline gap-1 mb-1">
+          <span class="text-4xl font-bold text-brand-950">89</span>
+          <span class="text-gray-400 text-lg">lei / lună</span>
+        </div>
+        <p class="text-gray-400 text-sm mb-6">Pregătire maximă cu mentor</p>
         <ul class="space-y-3 mb-8">
-          <li class="flex items-start">
-            <svg class="w-5 h-5 text-emerald-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-            </svg>
-            <span class="text-slate-700">Everything in Premium</span>
+          <li class="flex items-start gap-2.5">
+            <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+            <span class="text-gray-600 text-sm">Tot ce include Standard</span>
           </li>
-          <li class="flex items-start">
-            <svg class="w-5 h-5 text-emerald-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-            </svg>
-            <span class="text-slate-700">Custom reports</span>
+          <li class="flex items-start gap-2.5">
+            <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+            <span class="text-gray-600 text-sm">Recomandări AI personalizate</span>
           </li>
-          <li class="flex items-start">
-            <svg class="w-5 h-5 text-emerald-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-            </svg>
-            <span class="text-slate-700">Priority support</span>
+          <li class="flex items-start gap-2.5">
+            <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+            <span class="text-gray-600 text-sm">Plan de studiu săptămânal</span>
           </li>
-          <li class="flex items-start">
-            <svg class="w-5 h-5 text-emerald-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
-            </svg>
-            <span class="text-slate-700">API access</span>
+          <li class="flex items-start gap-2.5">
+            <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+            <span class="text-gray-600 text-sm">Raport pentru părinți</span>
+          </li>
+          <li class="flex items-start gap-2.5">
+            <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>
+            <span class="text-gray-600 text-sm">Suport prioritar</span>
           </li>
         </ul>
-
-        <button class="selectTierBtn w-full py-3 rounded-lg font-semibold transition-all"
-                data-tier="pro" id="btn_pro">
-          Select Plan
+        <button class="select-tier-btn w-full py-3 text-sm font-semibold rounded-xl border border-brand-200 text-brand-700 hover:bg-brand-50 active:bg-brand-100 transition-colors duration-200 focus-visible:outline-none" data-tier="premium">
+          Selectează
         </button>
       </div>
     </div>
 
-    <!-- Payment Method Selection (shown after tier selection) -->
-    <div id="paymentMethodSection" class="hidden bg-white rounded-xl border border-slate-200 p-8 mb-8">
-      <h2 class="text-2xl font-bold text-slate-900 mb-8">Select Payment Method</h2>
+    <!-- Payment Method Section (hidden until a paid tier is selected) -->
+    <div id="paymentSection" class="hidden max-w-2xl mx-auto fade-in">
+      <div class="card-elevated rounded-2xl bg-white border border-surface-200/60 p-6 sm:p-8">
+        <h2 class="font-display text-2xl text-brand-950 mb-2" style="letter-spacing:-0.03em;">Metodă de plată</h2>
+        <p class="text-gray-400 text-sm mb-6">Alege cum dorești să plătești pentru planul <strong id="selectedTierLabel" class="text-brand-700"></strong>.</p>
 
-      <div class="grid md:grid-cols-3 gap-4 mb-8">
-        <!-- Credit Card -->
-        <label class="card-hover cursor-pointer rounded-lg border-2 border-slate-200 p-6 transition-all hover:border-blue-400 hover:bg-blue-50 has-checked:border-blue-500 has-checked:bg-blue-50">
-          <input type="radio" name="paymentMethod" value="card" class="hidden" checked>
-          <div class="flex items-center mb-2">
-            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-              </svg>
-            </div>
-            <div>
-              <h3 class="font-semibold text-slate-900">Credit Card</h3>
-              <p class="text-xs text-slate-600">Visa, Mastercard, Amex</p>
+        <!-- Payment method cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
+          <!-- Card -->
+          <div class="method-card active rounded-xl border-2 border-brand-500 bg-brand-50/40 p-4 cursor-pointer transition-colors duration-200" data-method="card">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-brand-100 flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-brand-900">Card</p>
+                <p class="text-xs text-gray-400">Visa, Mastercard</p>
+              </div>
             </div>
           </div>
-        </label>
 
-        <!-- PayPal -->
-        <label class="card-hover cursor-pointer rounded-lg border-2 border-slate-200 p-6 transition-all hover:border-blue-400 hover:bg-blue-50 has-checked:border-blue-500 has-checked:bg-blue-50">
-          <input type="radio" name="paymentMethod" value="paypal" class="hidden">
-          <div class="flex items-center mb-2">
-            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-              <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M9.12 7.5H14.88C15.5 7.5 16 8 16 8.62V15.38C16 16 15.5 16.5 14.88 16.5H9.12C8.5 16.5 8 16 8 15.38V8.62C8 8 8.5 7.5 9.12 7.5Z"/>
-              </svg>
-            </div>
-            <div>
-              <h3 class="font-semibold text-slate-900">PayPal</h3>
-              <p class="text-xs text-slate-600">Fast & secure</p>
+          <!-- PayPal -->
+          <div class="method-card rounded-xl border-2 border-surface-200 p-4 cursor-pointer transition-colors duration-200" data-method="paypal">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5 text-brand-600" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M7.076 21.337H2.47a.641.641 0 01-.633-.74L4.944 2.17A.786.786 0 015.72 1.5h6.197c2.24 0 3.947.567 4.854 1.612.848.978 1.115 2.318.793 3.981l-.012.064v.572l.436.247c.372.198.67.427.896.69.359.42.59.945.685 1.561.098.634.063 1.37-.104 2.186-.192.94-.503 1.76-.925 2.434a5.063 5.063 0 01-1.468 1.543 5.7 5.7 0 01-1.934.846c-.72.178-1.534.267-2.42.267H12.2a.99.99 0 00-.978.834l-.042.244-.688 4.363-.032.177a.99.99 0 01-.978.833H7.076z"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-brand-900">PayPal</p>
+                <p class="text-xs text-gray-400">Rapid și sigur</p>
+              </div>
             </div>
           </div>
-        </label>
 
-        <!-- Cash -->
-        <label class="card-hover cursor-pointer rounded-lg border-2 border-slate-200 p-6 transition-all hover:border-blue-400 hover:bg-blue-50 has-checked:border-blue-500 has-checked:bg-blue-50">
-          <input type="radio" name="paymentMethod" value="cash" class="hidden">
-          <div class="flex items-center mb-2">
-            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
-              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-              </svg>
+          <!-- Cash / Bank Transfer -->
+          <div class="method-card rounded-xl border-2 border-surface-200 p-4 cursor-pointer transition-colors duration-200" data-method="cash">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-lg bg-surface-100 flex items-center justify-center shrink-0">
+                <svg class="w-5 h-5 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-brand-900">Transfer bancar</p>
+                <p class="text-xs text-gray-400">Plată directă</p>
+              </div>
             </div>
-            <div>
-              <h3 class="font-semibold text-slate-900">Bank Transfer</h3>
-              <p class="text-xs text-slate-600">Direct bank payment</p>
-            </div>
-          </div>
-        </label>
-      </div>
-
-      <!-- Card Details (for credit card only) -->
-      <div id="cardDetailsSection" class="mb-8">
-        <div class="rounded-lg border border-slate-200 p-6 bg-slate-50">
-          <div class="mb-4">
-            <label class="block text-sm font-semibold text-slate-900 mb-2">Card Number</label>
-            <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" maxlength="19">
-          </div>
-          <div class="grid grid-cols-2 gap-4 mb-4">
-            <div>
-              <label class="block text-sm font-semibold text-slate-900 mb-2">Expiry</label>
-              <input type="text" id="cardExpiry" placeholder="MM/YY" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" maxlength="5">
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-slate-900 mb-2">CVC</label>
-              <input type="text" id="cardCvc" placeholder="123" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" maxlength="4">
-            </div>
-          </div>
-          <div class="mb-4">
-            <label class="block text-sm font-semibold text-slate-900 mb-2">Cardholder Name</label>
-            <input type="text" id="cardName" placeholder="John Doe" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
           </div>
         </div>
-      </div>
 
-      <!-- Action Buttons -->
-      <div class="flex gap-4">
-        <button id="cancelPaymentBtn" class="px-6 py-3 rounded-lg border border-slate-300 text-slate-900 font-semibold hover:bg-slate-50 transition-all">
-          Back
-        </button>
-        <button id="proceedPaymentBtn" class="flex-1 px-6 py-3 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600 transition-all">
-          Proceed to Payment
-        </button>
+        <!-- Card details (only for card method) -->
+        <div id="cardDetailsSection" class="mb-6">
+          <div class="rounded-xl border border-surface-200 bg-surface-50 p-5 space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-brand-900 mb-1.5">Număr card</label>
+              <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19"
+                class="w-full px-4 py-2.5 rounded-xl border border-surface-300 bg-white text-brand-950 placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400 transition-colors duration-200">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-semibold text-brand-900 mb-1.5">Dată expirare</label>
+                <input type="text" id="cardExpiry" placeholder="LL/AA" maxlength="5"
+                  class="w-full px-4 py-2.5 rounded-xl border border-surface-300 bg-white text-brand-950 placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400 transition-colors duration-200">
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-brand-900 mb-1.5">CVC</label>
+                <input type="text" id="cardCvc" placeholder="123" maxlength="4"
+                  class="w-full px-4 py-2.5 rounded-xl border border-surface-300 bg-white text-brand-950 placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400 transition-colors duration-200">
+              </div>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-brand-900 mb-1.5">Numele titularului</label>
+              <input type="text" id="cardName" placeholder="Ion Popescu"
+                class="w-full px-4 py-2.5 rounded-xl border border-surface-300 bg-white text-brand-950 placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400 transition-colors duration-200">
+            </div>
+            <p class="flex items-center gap-1.5 text-xs text-surface-400">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/></svg>
+              Datele cardului sunt procesate securizat prin Stripe. Nu stocăm informații sensibile.
+            </p>
+          </div>
+        </div>
+
+        <!-- Bank transfer info (hidden by default) -->
+        <div id="bankTransferInfo" class="hidden mb-6">
+          <div class="rounded-xl border border-accent-warm/30 bg-accent-warmLight p-5">
+            <h4 class="text-sm font-semibold text-brand-900 mb-3">Detalii transfer bancar</h4>
+            <div class="space-y-2 text-sm text-gray-600">
+              <p><span class="font-medium text-brand-800">Titular:</span> EvalPrep SRL</p>
+              <p><span class="font-medium text-brand-800">IBAN:</span> RO49 AAAA 1B31 0075 9384 0000</p>
+              <p><span class="font-medium text-brand-800">Bancă:</span> Banca Transilvania</p>
+              <p><span class="font-medium text-brand-800">Descriere:</span> Abonament EvalPrep — <span id="bankTierName">Standard</span></p>
+            </div>
+            <p class="text-xs text-gray-400 mt-3">Contul tău va fi activat în maxim 24h după confirmarea plății de către echipa noastră.</p>
+          </div>
+        </div>
+
+        <!-- PayPal info -->
+        <div id="paypalInfo" class="hidden mb-6">
+          <div class="rounded-xl border border-surface-200 bg-surface-50 p-5 text-center">
+            <p class="text-sm text-gray-600">Vei fi redirecționat către PayPal pentru a finaliza plata în siguranță.</p>
+          </div>
+        </div>
+
+        <!-- Validation errors -->
+        <div id="validationError" class="hidden mb-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700"></div>
+
+        <!-- Buttons -->
+        <div class="flex gap-3">
+          <button id="cancelBtn" class="px-5 py-3 rounded-xl border border-surface-300 text-brand-700 text-sm font-semibold hover:bg-surface-100 active:bg-surface-200 transition-colors duration-200 focus-visible:outline-none">
+            Înapoi
+          </button>
+          <button id="payBtn" class="flex-1 py-3 rounded-xl text-sm font-semibold text-white bg-brand-500 hover:bg-brand-600 active:bg-brand-700 transition-colors duration-200 focus-visible:outline-none flex items-center justify-center gap-2">
+            <span id="payBtnText">Plătește acum</span>
+            <svg id="payBtnSpinner" class="hidden spinner w-4 h-4" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="3" stroke-dasharray="31.4 31.4" stroke-linecap="round"/></svg>
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- Messages -->
-    <div id="messageBox" class="hidden mb-8"></div>
+    <!-- Message box -->
+    <div id="messageBox" class="hidden max-w-2xl mx-auto mt-6"></div>
   </div>
 
   <script>
     let selectedTier = null;
+    let selectedMethod = 'card';
     let paymentConfig = null;
 
-    // Load payment configuration
+    // ── Load config ──
     async function loadPaymentConfig() {
-      const res = await fetch('/api/payment/config');
-      paymentConfig = await res.json();
-      updateUIWithCurrentTier();
+      try {
+        const res = await fetch('/api/payment/config');
+        if (!res.ok) { window.location.href = '/login.html'; return; }
+        paymentConfig = await res.json();
+        updateTierBadges();
+        autoSelectFromURL();
+      } catch { window.location.href = '/login.html'; }
     }
 
-    // Update UI to show current tier
-    function updateUIWithCurrentTier() {
+    // ── Auto-select from URL param ──
+    function autoSelectFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      const tier = params.get('tier');
+      if (tier && ['free','standard','premium'].includes(tier)) {
+        selectTier(tier);
+      }
+    }
+
+    // ── Tier badges ──
+    function updateTierBadges() {
       const current = paymentConfig.currentTier;
-
-      // Show badge for current tier
-      document.getElementById('freeBadge').innerHTML =
-        current === 'free' ? '<span class="badge-active px-3 py-1 rounded-full text-xs font-semibold">CURRENT</span>' : '';
-      document.getElementById('proBadge').innerHTML = '';
-
-      // Update button states
-      ['free', 'premium', 'pro'].forEach(tier => {
-        const btn = document.getElementById(`btn_${tier}`);
+      ['free','standard','premium'].forEach(tier => {
+        const badge = document.getElementById(`${tier}Badge`);
+        const btn = document.querySelector(`.select-tier-btn[data-tier="${tier}"]`);
         if (current === tier) {
-          btn.textContent = 'Current Plan';
-          btn.classList.add('opacity-50', 'cursor-not-allowed');
+          badge.textContent = 'ACTUAL';
+          badge.className = 'text-xs font-semibold px-3 py-1 rounded-full bg-brand-100 text-brand-700 border border-brand-200';
+          btn.textContent = 'Plan actual';
           btn.disabled = true;
+          btn.classList.add('opacity-50', 'cursor-not-allowed');
         } else {
-          btn.textContent = 'Select Plan';
-          btn.classList.remove('opacity-50', 'cursor-not-allowed');
+          badge.textContent = '';
+          badge.className = 'text-xs font-semibold px-3 py-1 rounded-full';
+          btn.textContent = 'Selectează';
           btn.disabled = false;
+          btn.classList.remove('opacity-50', 'cursor-not-allowed');
         }
       });
     }
 
-    // Tier selection
-    document.querySelectorAll('.selectTierBtn').forEach(btn => {
+    // ── Select tier ──
+    function selectTier(tier) {
+      selectedTier = tier;
+
+      // Highlight selected card
+      document.querySelectorAll('.tier-card').forEach(c => {
+        c.classList.toggle('ring-2', c.dataset.tier === tier);
+        c.classList.toggle('ring-brand-400', c.dataset.tier === tier);
+      });
+
+      if (tier === 'free') {
+        upgradeToFree();
+        return;
+      }
+
+      const names = { standard: 'Standard — 49 lei/lună', premium: 'Premium — 89 lei/lună' };
+      document.getElementById('selectedTierLabel').textContent = names[tier] || tier;
+      document.getElementById('bankTierName').textContent = tier.charAt(0).toUpperCase() + tier.slice(1);
+      document.getElementById('paymentSection').classList.remove('hidden');
+      document.getElementById('paymentSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    // ── Tier card clicks ──
+    document.querySelectorAll('.tier-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const tier = card.dataset.tier;
+        const btn = card.querySelector('.select-tier-btn');
+        if (!btn.disabled) selectTier(tier);
+      });
+    });
+    document.querySelectorAll('.select-tier-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        selectedTier = e.target.dataset.tier;
-
-        if (selectedTier === 'free') {
-          // Free tier - direct upgrade
-          upgradeToFree();
-        } else {
-          // Paid tiers - show payment method selection
-          document.getElementById('paymentMethodSection').classList.remove('hidden');
-          document.querySelector('.grid.md\\:grid-cols-3').scrollIntoView({ behavior: 'smooth' });
-        }
+        e.stopPropagation();
+        if (!btn.disabled) selectTier(btn.dataset.tier);
       });
     });
 
-    // Payment method radio change
-    document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
-      radio.addEventListener('change', (e) => {
-        const cardSection = document.getElementById('cardDetailsSection');
-        if (e.target.value === 'card') {
-          cardSection.classList.remove('hidden');
-        } else {
-          cardSection.classList.add('hidden');
-        }
+    // ── Payment method selection ──
+    document.querySelectorAll('.method-card').forEach(card => {
+      card.addEventListener('click', () => {
+        selectedMethod = card.dataset.method;
+        document.querySelectorAll('.method-card').forEach(c => {
+          const isActive = c.dataset.method === selectedMethod;
+          c.classList.toggle('active', isActive);
+          c.classList.toggle('border-brand-500', isActive);
+          c.classList.toggle('bg-brand-50/40', isActive);
+          c.classList.toggle('border-surface-200', !isActive);
+        });
+
+        document.getElementById('cardDetailsSection').classList.toggle('hidden', selectedMethod !== 'card');
+        document.getElementById('bankTransferInfo').classList.toggle('hidden', selectedMethod !== 'cash');
+        document.getElementById('paypalInfo').classList.toggle('hidden', selectedMethod !== 'paypal');
+
+        const labels = { card: 'Plătește acum', paypal: 'Plătește cu PayPal', cash: 'Trimite cerere de plată' };
+        document.getElementById('payBtnText').textContent = labels[selectedMethod];
       });
     });
 
-    // Cancel payment
-    document.getElementById('cancelPaymentBtn').addEventListener('click', () => {
-      document.getElementById('paymentMethodSection').classList.add('hidden');
+    // ── Card formatting ──
+    document.getElementById('cardNumber').addEventListener('input', (e) => {
+      e.target.value = e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
+    });
+    document.getElementById('cardExpiry').addEventListener('input', (e) => {
+      const val = e.target.value.replace(/\D/g, '');
+      e.target.value = val.length >= 2 ? val.slice(0,2) + '/' + val.slice(2,4) : val;
+    });
+    document.getElementById('cardCvc').addEventListener('input', (e) => {
+      e.target.value = e.target.value.replace(/\D/g, '');
+    });
+
+    // ── Validation ──
+    function validate() {
+      if (selectedMethod !== 'card') return true;
+      const num = document.getElementById('cardNumber').value.replace(/\s/g, '');
+      const exp = document.getElementById('cardExpiry').value;
+      const cvc = document.getElementById('cardCvc').value;
+      const name = document.getElementById('cardName').value.trim();
+
+      const errors = [];
+      if (num.length < 13 || num.length > 19) errors.push('Numărul cardului este invalid.');
+      if (!/^\d{2}\/\d{2}$/.test(exp)) errors.push('Data de expirare trebuie să fie în format LL/AA.');
+      if (cvc.length < 3) errors.push('CVC-ul trebuie să aibă minim 3 cifre.');
+      if (!name) errors.push('Introdu numele titularului cardului.');
+
+      if (errors.length) {
+        showValidation(errors.join(' '));
+        return false;
+      }
+      hideValidation();
+      return true;
+    }
+
+    function showValidation(msg) {
+      const el = document.getElementById('validationError');
+      el.textContent = msg;
+      el.classList.remove('hidden');
+    }
+    function hideValidation() {
+      document.getElementById('validationError').classList.add('hidden');
+    }
+
+    // ── Cancel ──
+    document.getElementById('cancelBtn').addEventListener('click', () => {
+      document.getElementById('paymentSection').classList.add('hidden');
       selectedTier = null;
+      document.querySelectorAll('.tier-card').forEach(c => {
+        c.classList.remove('ring-2', 'ring-brand-400');
+      });
     });
 
-    // Proceed to payment
-    document.getElementById('proceedPaymentBtn').addEventListener('click', async () => {
-      const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+    // ── Pay ──
+    document.getElementById('payBtn').addEventListener('click', async () => {
+      if (!selectedTier) return;
+      if (!validate()) return;
 
-      showMessage('Processing...', 'info');
+      setLoading(true);
+      hideValidation();
 
       try {
         const res = await fetch('/api/payment/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ tier: selectedTier, paymentMethod })
+          body: JSON.stringify({ tier: selectedTier, paymentMethod: selectedMethod })
         });
-
         const data = await res.json();
 
         if (!res.ok) {
-          showMessage(data.error, 'error');
+          showMessage(data.error || 'Eroare la procesarea plății.', 'error');
+          setLoading(false);
           return;
         }
 
         if (data.url) {
-          // Redirect to Stripe checkout
           window.location.href = data.url;
+        } else if (data.method === 'cash') {
+          showMessage(data.message, 'success');
+          setLoading(false);
         } else {
-          showMessage('Payment successful! Tier updated.', 'success');
-          setTimeout(() => location.reload(), 2000);
+          showMessage('Planul a fost actualizat cu succes!', 'success');
+          setTimeout(() => window.location.reload(), 2000);
         }
-      } catch (error) {
-        showMessage(error.message, 'error');
+      } catch (err) {
+        showMessage('Eroare de conexiune. Încearcă din nou.', 'error');
+        setLoading(false);
       }
     });
 
-    // Format card number
-    document.getElementById('cardNumber').addEventListener('input', (e) => {
-      e.target.value = e.target.value.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim();
-    });
-
-    // Format expiry
-    document.getElementById('cardExpiry').addEventListener('input', (e) => {
-      const val = e.target.value.replace(/\D/g, '');
-      if (val.length >= 2) {
-        e.target.value = val.slice(0, 2) + '/' + val.slice(2, 4);
-      } else {
-        e.target.value = val;
-      }
-    });
-
-    // Show message
-    function showMessage(text, type = 'info') {
-      const box = document.getElementById('messageBox');
-      const bgClass = type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
-                      type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
-                      'bg-blue-50 border-blue-200 text-blue-800';
-
-      box.innerHTML = `<div class="rounded-lg border ${bgClass} p-4">${text}</div>`;
-      box.classList.remove('hidden');
-    }
-
-    // Upgrade to free
+    // ── Free upgrade ──
     async function upgradeToFree() {
-      showMessage('Processing...', 'info');
-
       try {
         const res = await fetch('/api/payment/checkout', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ tier: 'free', paymentMethod: 'none' })
         });
-
         const data = await res.json();
         if (data.success) {
-          showMessage('Welcome to the Free tier!', 'success');
-          setTimeout(() => location.reload(), 2000);
+          showMessage('Bine ai venit pe planul Gratuit!', 'success');
+          setTimeout(() => window.location.reload(), 2000);
         }
-      } catch (error) {
-        showMessage(error.message, 'error');
+      } catch {
+        showMessage('Eroare. Încearcă din nou.', 'error');
       }
     }
 
+    // ── Helpers ──
+    function setLoading(on) {
+      document.getElementById('payBtn').disabled = on;
+      document.getElementById('payBtnSpinner').classList.toggle('hidden', !on);
+      document.getElementById('payBtnText').textContent = on ? 'Se procesează...' : 'Plătește acum';
+    }
+
+    function showMessage(text, type) {
+      const box = document.getElementById('messageBox');
+      const cls = type === 'success'
+        ? 'border-brand-200 bg-brand-50 text-brand-800'
+        : 'border-red-200 bg-red-50 text-red-800';
+      const icon = type === 'success'
+        ? '<svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"/></svg>'
+        : '<svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/></svg>';
+      box.innerHTML = `<div class="rounded-xl border ${cls} p-4 flex items-center gap-3 text-sm font-medium">${icon} ${text}</div>`;
+      box.classList.remove('hidden');
+    }
+
+    // ── Init ──
     loadPaymentConfig();
   </script>
 </body>

@@ -1,306 +1,316 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ro">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Payment Management - Admin - EvalPrep</title>
+  <title>Admin Plăți — EvalPrep</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f7f4', 100: '#d9ede2', 200: '#b5dbc7', 300: '#85c2a4',
+              400: '#56a57e', 500: '#368763', 600: '#276c4f', 700: '#205741',
+              800: '#1c4635', 900: '#183a2d', 950: '#0c2019',
+            },
+            surface: { 50: '#fafbfc', 100: '#f3f5f7', 200: '#e8ecf0', 300: '#d5dbe3', 400: '#a8b3c0' },
+            accent: { warm: '#e8985e', warmLight: '#fdf3eb', sky: '#4a9eca', skyLight: '#edf6fb' }
+          },
+          fontFamily: {
+            display: ['"DM Serif Display"', 'serif'],
+            body: ['"Inter"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap');
-    body { font-family: 'Sora', sans-serif; }
-    .table-row:hover { background-color: rgb(248, 250, 252); }
-    .badge { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold; }
-    .badge-success { @apply bg-emerald-100 text-emerald-800; }
-    .badge-pending { @apply bg-yellow-100 text-yellow-800; }
-    .badge-failed { @apply bg-red-100 text-red-800; }
-    .badge-premium { @apply bg-purple-100 text-purple-800; }
-    .badge-pro { @apply bg-blue-100 text-blue-800; }
+    * { font-family: 'Inter', sans-serif; }
+    h1, h2, h3, .font-display { font-family: 'DM Serif Display', serif; }
+    .table-row { transition: background-color 0.15s ease; }
+    .table-row:hover { background-color: #f0f7f4; }
   </style>
 </head>
-<body class="bg-slate-50 min-h-screen">
+<body class="bg-surface-50 min-h-screen">
   <!-- Navigation -->
-  <nav class="bg-white border-b border-slate-200 sticky top-0 z-40">
-    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+  <nav class="bg-white border-b border-surface-200 sticky top-0 z-40" style="box-shadow: 0 1px 3px rgba(54,135,99,0.04);">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <h1 class="text-2xl font-bold text-slate-900">💳 Payment Admin</h1>
+        <a href="/admin.html" class="text-brand-600 hover:text-brand-800 transition-colors duration-200">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        </a>
+        <h1 class="font-display text-xl sm:text-2xl text-brand-950">Administrare Plăți</h1>
       </div>
       <div class="flex items-center gap-4">
-        <span class="text-sm text-slate-600" id="adminName">Admin</span>
-        <button id="logoutBtn" class="text-sm text-slate-600 hover:text-slate-900 font-medium">Logout</button>
+        <span class="text-sm text-surface-400" id="adminName">Admin</span>
+        <button id="logoutBtn" class="text-sm text-brand-600 hover:text-brand-800 font-medium transition-colors duration-200">Deconectare</button>
       </div>
     </div>
   </nav>
 
-  <div class="max-w-7xl mx-auto px-4 py-8">
-    <!-- Header Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-      <!-- Total Revenue -->
-      <div class="bg-white rounded-lg border border-slate-200 p-6">
-        <p class="text-slate-600 text-sm font-medium mb-2">Total Revenue (30 days)</p>
-        <p class="text-3xl font-bold text-slate-900" id="totalRevenue">$0</p>
-        <p class="text-xs text-slate-500 mt-2" id="revenueChange">+0% from last month</p>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+    <!-- Stats -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-5 mb-6 sm:mb-8">
+      <div class="rounded-2xl bg-white border border-surface-200/60 p-4 sm:p-6" style="box-shadow: 0 1px 3px rgba(54,135,99,0.04);">
+        <p class="text-surface-400 text-xs sm:text-sm font-medium mb-1">Venituri (30 zile)</p>
+        <p class="text-2xl sm:text-3xl font-bold text-brand-950" id="totalRevenue">0 lei</p>
       </div>
-
-      <!-- Active Subscriptions -->
-      <div class="bg-white rounded-lg border border-slate-200 p-6">
-        <p class="text-slate-600 text-sm font-medium mb-2">Active Subscriptions</p>
-        <p class="text-3xl font-bold text-slate-900" id="activeSubscriptions">0</p>
-        <p class="text-xs text-slate-500 mt-2">Premium & Pro tiers</p>
+      <div class="rounded-2xl bg-white border border-surface-200/60 p-4 sm:p-6" style="box-shadow: 0 1px 3px rgba(54,135,99,0.04);">
+        <p class="text-surface-400 text-xs sm:text-sm font-medium mb-1">Abonamente active</p>
+        <p class="text-2xl sm:text-3xl font-bold text-brand-950" id="activeSubscriptions">0</p>
       </div>
-
-      <!-- Successful Payments -->
-      <div class="bg-white rounded-lg border border-slate-200 p-6">
-        <p class="text-slate-600 text-sm font-medium mb-2">Successful Payments</p>
-        <p class="text-3xl font-bold text-slate-900" id="successfulPayments">0</p>
-        <p class="text-xs text-slate-500 mt-2">Total all-time</p>
+      <div class="rounded-2xl bg-white border border-surface-200/60 p-4 sm:p-6" style="box-shadow: 0 1px 3px rgba(54,135,99,0.04);">
+        <p class="text-surface-400 text-xs sm:text-sm font-medium mb-1">Plăți reușite</p>
+        <p class="text-2xl sm:text-3xl font-bold text-brand-500" id="successfulPayments">0</p>
       </div>
-
-      <!-- Failed Payments -->
-      <div class="bg-white rounded-lg border border-slate-200 p-6">
-        <p class="text-slate-600 text-sm font-medium mb-2">Failed Payments</p>
-        <p class="text-3xl font-bold text-red-600" id="failedPayments">0</p>
-        <p class="text-xs text-slate-500 mt-2">Requiring attention</p>
+      <div class="rounded-2xl bg-white border border-surface-200/60 p-4 sm:p-6" style="box-shadow: 0 1px 3px rgba(54,135,99,0.04);">
+        <p class="text-surface-400 text-xs sm:text-sm font-medium mb-1">În așteptare</p>
+        <p class="text-2xl sm:text-3xl font-bold text-accent-warm" id="pendingPayments">0</p>
       </div>
     </div>
 
-    <!-- Filters & Search -->
-    <div class="bg-white rounded-lg border border-slate-200 p-6 mb-8">
-      <div class="flex flex-col md:flex-row gap-4">
-        <input type="text" id="searchInput" placeholder="Search by email or name..." class="flex-1 px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <select id="statusFilter" class="px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option value="">All Statuses</option>
-          <option value="succeeded">Succeeded</option>
-          <option value="pending">Pending</option>
-          <option value="failed">Failed</option>
+    <!-- Filters -->
+    <div class="rounded-2xl bg-white border border-surface-200/60 p-4 sm:p-5 mb-6" style="box-shadow: 0 1px 3px rgba(54,135,99,0.04);">
+      <div class="flex flex-col sm:flex-row gap-3">
+        <input type="text" id="searchInput" placeholder="Caută după email sau nume..." class="flex-1 px-4 py-2.5 rounded-xl border border-surface-300 bg-white text-brand-950 placeholder:text-surface-400 focus:outline-none focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400 text-sm transition-colors duration-200">
+        <select id="statusFilter" class="px-4 py-2.5 rounded-xl border border-surface-300 text-sm text-brand-950 focus:outline-none focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400 transition-colors duration-200">
+          <option value="">Toate statusurile</option>
+          <option value="succeeded">Reușite</option>
+          <option value="pending">În așteptare</option>
+          <option value="failed">Eșuate</option>
         </select>
-        <select id="tierFilter" class="px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option value="">All Tiers</option>
-          <option value="free">Free</option>
+        <select id="tierFilter" class="px-4 py-2.5 rounded-xl border border-surface-300 text-sm text-brand-950 focus:outline-none focus:ring-2 focus:ring-brand-400/40 focus:border-brand-400 transition-colors duration-200">
+          <option value="">Toate planurile</option>
+          <option value="free">Gratuit</option>
+          <option value="standard">Standard</option>
           <option value="premium">Premium</option>
-          <option value="pro">Pro</option>
         </select>
-        <button id="refreshBtn" class="px-6 py-2 rounded-lg bg-blue-500 text-white font-medium hover:bg-blue-600 transition-all">
-          Refresh
+        <button id="refreshBtn" class="px-5 py-2.5 rounded-xl bg-brand-500 text-white text-sm font-semibold hover:bg-brand-600 active:bg-brand-700 transition-colors duration-200 focus-visible:outline-none">
+          Reîmprospătează
         </button>
       </div>
     </div>
 
     <!-- Payments Table -->
-    <div class="bg-white rounded-lg border border-slate-200 overflow-hidden">
+    <div class="rounded-2xl bg-white border border-surface-200/60 overflow-hidden" style="box-shadow: 0 1px 3px rgba(54,135,99,0.04);">
       <div class="overflow-x-auto">
         <table class="w-full">
-          <thead class="bg-slate-50 border-b border-slate-200">
+          <thead class="bg-surface-50 border-b border-surface-200">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-semibold text-slate-900">User</th>
-              <th class="px-6 py-3 text-left text-xs font-semibold text-slate-900">Email</th>
-              <th class="px-6 py-3 text-left text-xs font-semibold text-slate-900">Tier</th>
-              <th class="px-6 py-3 text-left text-xs font-semibold text-slate-900">Amount</th>
-              <th class="px-6 py-3 text-left text-xs font-semibold text-slate-900">Status</th>
-              <th class="px-6 py-3 text-left text-xs font-semibold text-slate-900">Sub Status</th>
-              <th class="px-6 py-3 text-left text-xs font-semibold text-slate-900">Date</th>
-              <th class="px-6 py-3 text-left text-xs font-semibold text-slate-900">Actions</th>
+              <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-brand-900 uppercase tracking-wider">Utilizator</th>
+              <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-brand-900 uppercase tracking-wider">Email</th>
+              <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-brand-900 uppercase tracking-wider">Plan</th>
+              <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-brand-900 uppercase tracking-wider">Sumă</th>
+              <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-brand-900 uppercase tracking-wider">Metodă</th>
+              <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-brand-900 uppercase tracking-wider">Status</th>
+              <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-brand-900 uppercase tracking-wider">Data</th>
+              <th class="px-4 sm:px-6 py-3 text-left text-xs font-semibold text-brand-900 uppercase tracking-wider">Acțiuni</th>
             </tr>
           </thead>
-          <tbody id="paymentsTable" class="divide-y divide-slate-200">
-            <tr class="table-row">
-              <td colspan="8" class="px-6 py-8 text-center text-slate-600">Loading payments...</td>
-            </tr>
+          <tbody id="paymentsTable" class="divide-y divide-surface-200">
+            <tr><td colspan="8" class="px-6 py-10 text-center text-surface-400 text-sm">Se încarcă plățile...</td></tr>
           </tbody>
         </table>
       </div>
 
-      <!-- Empty State -->
       <div id="emptyState" class="hidden text-center py-12 px-6">
-        <svg class="w-12 h-12 text-slate-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        <svg class="w-12 h-12 text-surface-300 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"/>
         </svg>
-        <p class="text-slate-600 font-medium">No payments found</p>
+        <p class="text-surface-400 font-medium text-sm">Nicio plată găsită</p>
       </div>
     </div>
 
-    <!-- Subscription Status Breakdown -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
-      <!-- Subscription Distribution -->
-      <div class="bg-white rounded-lg border border-slate-200 p-6">
-        <h3 class="font-bold text-slate-900 mb-4">Subscription Distribution</h3>
+    <!-- Distribution + Activity -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mt-6 sm:mt-8">
+      <div class="rounded-2xl bg-white border border-surface-200/60 p-5 sm:p-6" style="box-shadow: 0 1px 3px rgba(54,135,99,0.04);">
+        <h3 class="font-display text-lg text-brand-950 mb-4">Distribuție abonamente</h3>
         <div class="space-y-3">
           <div>
             <div class="flex justify-between text-sm mb-1">
-              <span class="text-slate-600">Premium</span>
-              <span class="font-semibold text-slate-900" id="premiumCount">0</span>
+              <span class="text-gray-500">Standard</span>
+              <span class="font-semibold text-brand-900" id="standardCount">0</span>
             </div>
-            <div class="w-full bg-slate-200 rounded-full h-2">
-              <div class="bg-purple-500 h-2 rounded-full" id="premiumBar" style="width: 0%"></div>
-            </div>
+            <div class="w-full bg-surface-200 rounded-full h-2"><div class="bg-brand-500 h-2 rounded-full transition-all duration-500" id="standardBar" style="width:0%"></div></div>
           </div>
           <div>
             <div class="flex justify-between text-sm mb-1">
-              <span class="text-slate-600">Pro</span>
-              <span class="font-semibold text-slate-900" id="proCount">0</span>
+              <span class="text-gray-500">Premium</span>
+              <span class="font-semibold text-brand-900" id="premiumCount">0</span>
             </div>
-            <div class="w-full bg-slate-200 rounded-full h-2">
-              <div class="bg-blue-500 h-2 rounded-full" id="proBar" style="width: 0%"></div>
-            </div>
+            <div class="w-full bg-surface-200 rounded-full h-2"><div class="bg-accent-warm h-2 rounded-full transition-all duration-500" id="premiumBar" style="width:0%"></div></div>
           </div>
           <div>
             <div class="flex justify-between text-sm mb-1">
-              <span class="text-slate-600">Free</span>
-              <span class="font-semibold text-slate-900" id="freeCount">0</span>
+              <span class="text-gray-500">Gratuit</span>
+              <span class="font-semibold text-brand-900" id="freeCount">0</span>
             </div>
-            <div class="w-full bg-slate-200 rounded-full h-2">
-              <div class="bg-slate-500 h-2 rounded-full" id="freeBar" style="width: 0%"></div>
-            </div>
+            <div class="w-full bg-surface-200 rounded-full h-2"><div class="bg-surface-400 h-2 rounded-full transition-all duration-500" id="freeBar" style="width:0%"></div></div>
           </div>
         </div>
       </div>
 
-      <!-- Recent Payments -->
-      <div class="md:col-span-2 bg-white rounded-lg border border-slate-200 p-6">
-        <h3 class="font-bold text-slate-900 mb-4">Recent Payment Activity</h3>
+      <div class="md:col-span-2 rounded-2xl bg-white border border-surface-200/60 p-5 sm:p-6" style="box-shadow: 0 1px 3px rgba(54,135,99,0.04);">
+        <h3 class="font-display text-lg text-brand-950 mb-4">Activitate recentă</h3>
         <div id="activityFeed" class="space-y-3">
-          <p class="text-slate-600 text-sm">Loading activity...</p>
+          <p class="text-surface-400 text-sm">Se încarcă...</p>
         </div>
       </div>
     </div>
   </div>
 
+  <!-- Toast notification -->
+  <div id="toast" class="hidden fixed bottom-6 right-6 z-50 rounded-xl border px-5 py-3 text-sm font-medium shadow-lg transition-transform duration-300"></div>
+
   <script>
     let allPayments = [];
 
-    // Load admin data
+    const methodLabels = { card: 'Card', paypal: 'PayPal', cash: 'Transfer', none: '—' };
+    const statusLabels = { succeeded: 'Reușită', pending: 'În așteptare', failed: 'Eșuată' };
+    const statusClasses = {
+      succeeded: 'bg-brand-50 text-brand-700 border border-brand-200',
+      pending: 'bg-accent-warmLight text-accent-warm border border-accent-warm/30',
+      failed: 'bg-red-50 text-red-700 border border-red-200'
+    };
+    const tierLabels = { free: 'Gratuit', standard: 'Standard', premium: 'Premium' };
+
     async function loadPayments() {
       try {
         const res = await fetch('/api/admin/payments');
+        if (!res.ok) { window.location.href = '/login.html'; return; }
         const data = await res.json();
-
-        if (!res.ok) {
-          console.error('Error:', data.error);
-          return;
-        }
-
         allPayments = data.payments || [];
         renderPayments();
         updateStats();
-      } catch (error) {
-        console.error('Error loading payments:', error);
-      }
+      } catch (e) { console.error('Eroare:', e); }
     }
 
-    // Render payments table
     function renderPayments() {
       const table = document.getElementById('paymentsTable');
-      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-      const statusFilter = document.getElementById('statusFilter').value;
-      const tierFilter = document.getElementById('tierFilter').value;
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const status = document.getElementById('statusFilter').value;
+      const tier = document.getElementById('tierFilter').value;
 
-      let filtered = allPayments.filter(p => {
-        const matchesSearch = !searchTerm ||
-          p.email.toLowerCase().includes(searchTerm) ||
-          p.name.toLowerCase().includes(searchTerm);
-        const matchesStatus = !statusFilter || p.status === statusFilter;
-        const matchesTier = !tierFilter || p.tier === tierFilter;
-        return matchesSearch && matchesStatus && matchesTier;
+      const filtered = allPayments.filter(p => {
+        const matchSearch = !search || p.email.toLowerCase().includes(search) || p.name.toLowerCase().includes(search);
+        const matchStatus = !status || p.status === status;
+        const matchTier = !tier || p.tier === tier;
+        return matchSearch && matchStatus && matchTier;
       });
 
-      if (filtered.length === 0) {
+      if (!filtered.length) {
         table.innerHTML = '';
         document.getElementById('emptyState').classList.remove('hidden');
         return;
       }
 
       document.getElementById('emptyState').classList.add('hidden');
-      table.innerHTML = filtered.map(payment => `
+      table.innerHTML = filtered.map(p => `
         <tr class="table-row">
-          <td class="px-6 py-4 text-sm font-medium text-slate-900">${payment.name}</td>
-          <td class="px-6 py-4 text-sm text-slate-600">${payment.email}</td>
-          <td class="px-6 py-4 text-sm">
-            <span class="badge ${payment.tier === 'premium' ? 'badge-premium' : payment.tier === 'pro' ? 'badge-pro' : 'bg-slate-100 text-slate-800'}">
-              ${payment.tier?.charAt(0).toUpperCase() + payment.tier?.slice(1) || 'Free'}
-            </span>
-          </td>
-          <td class="px-6 py-4 text-sm font-semibold text-slate-900">$${(payment.amount / 100).toFixed(2)}</td>
-          <td class="px-6 py-4 text-sm">
-            <span class="badge ${payment.status === 'succeeded' ? 'badge-success' : payment.status === 'pending' ? 'badge-pending' : 'badge-failed'}">
-              ${payment.status?.charAt(0).toUpperCase() + payment.status?.slice(1)}
-            </span>
-          </td>
-          <td class="px-6 py-4 text-sm">
-            ${payment.subscription_status ? `<span class="badge ${payment.subscription_status === 'active' ? 'badge-success' : 'badge-failed'}">${payment.subscription_status}</span>` : '—'}
-          </td>
-          <td class="px-6 py-4 text-sm text-slate-600">${new Date(payment.created_at).toLocaleDateString()}</td>
-          <td class="px-6 py-4 text-sm">
-            <button class="text-blue-500 hover:text-blue-700 font-semibold text-xs">View</button>
+          <td class="px-4 sm:px-6 py-3.5 text-sm font-medium text-brand-950">${esc(p.name)}</td>
+          <td class="px-4 sm:px-6 py-3.5 text-sm text-gray-500">${esc(p.email)}</td>
+          <td class="px-4 sm:px-6 py-3.5 text-sm"><span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold bg-surface-100 text-brand-800">${tierLabels[p.tier] || p.tier}</span></td>
+          <td class="px-4 sm:px-6 py-3.5 text-sm font-semibold text-brand-950">${(p.amount / 100).toFixed(0)} lei</td>
+          <td class="px-4 sm:px-6 py-3.5 text-sm text-gray-500">${methodLabels[p.payment_method] || p.payment_method}</td>
+          <td class="px-4 sm:px-6 py-3.5 text-sm"><span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusClasses[p.status] || ''}">${statusLabels[p.status] || p.status}</span></td>
+          <td class="px-4 sm:px-6 py-3.5 text-sm text-gray-500">${new Date(p.created_at).toLocaleDateString('ro-RO')}</td>
+          <td class="px-4 sm:px-6 py-3.5 text-sm">
+            ${p.status === 'pending' ? `
+              <div class="flex gap-2">
+                <button onclick="confirmPayment(${p.id})" class="px-3 py-1 rounded-lg bg-brand-500 text-white text-xs font-semibold hover:bg-brand-600 transition-colors duration-200">Confirmă</button>
+                <button onclick="rejectPayment(${p.id})" class="px-3 py-1 rounded-lg border border-red-200 text-red-600 text-xs font-semibold hover:bg-red-50 transition-colors duration-200">Respinge</button>
+              </div>
+            ` : '<span class="text-surface-400 text-xs">—</span>'}
           </td>
         </tr>
       `).join('');
     }
 
-    // Update statistics
     function updateStats() {
       const succeeded = allPayments.filter(p => p.status === 'succeeded');
-      const failed = allPayments.filter(p => p.status === 'failed');
-      const totalRevenue = succeeded.reduce((sum, p) => sum + (p.amount || 0), 0);
+      const pending = allPayments.filter(p => p.status === 'pending');
+      const revenue = succeeded.reduce((s, p) => s + (p.amount || 0), 0);
 
-      // Update cards
-      document.getElementById('totalRevenue').textContent = '$' + (totalRevenue / 100).toFixed(2);
+      document.getElementById('totalRevenue').textContent = (revenue / 100).toFixed(0) + ' lei';
       document.getElementById('activeSubscriptions').textContent = allPayments.filter(p => p.subscription_status === 'active').length;
       document.getElementById('successfulPayments').textContent = succeeded.length;
-      document.getElementById('failedPayments').textContent = failed.length;
+      document.getElementById('pendingPayments').textContent = pending.length;
 
-      // Update distribution
-      const premiumCount = allPayments.filter(p => p.tier === 'premium').length;
-      const proCount = allPayments.filter(p => p.tier === 'pro').length;
-      const freeCount = allPayments.filter(p => p.tier === 'free').length;
+      const standardC = allPayments.filter(p => p.tier === 'standard').length;
+      const premiumC = allPayments.filter(p => p.tier === 'premium').length;
+      const freeC = allPayments.filter(p => p.tier === 'free').length;
       const total = allPayments.length || 1;
 
-      document.getElementById('premiumCount').textContent = premiumCount;
-      document.getElementById('premiumBar').style.width = (premiumCount / total * 100) + '%';
+      document.getElementById('standardCount').textContent = standardC;
+      document.getElementById('standardBar').style.width = (standardC / total * 100) + '%';
+      document.getElementById('premiumCount').textContent = premiumC;
+      document.getElementById('premiumBar').style.width = (premiumC / total * 100) + '%';
+      document.getElementById('freeCount').textContent = freeC;
+      document.getElementById('freeBar').style.width = (freeC / total * 100) + '%';
 
-      document.getElementById('proCount').textContent = proCount;
-      document.getElementById('proBar').style.width = (proCount / total * 100) + '%';
-
-      document.getElementById('freeCount').textContent = freeCount;
-      document.getElementById('freeBar').style.width = (freeCount / total * 100) + '%';
-
-      // Activity feed
       const recent = succeeded.slice(0, 5);
       document.getElementById('activityFeed').innerHTML = recent.map(p => `
-        <div class="flex items-start gap-3 pb-3 border-b border-slate-100 last:border-b-0">
-          <div class="w-2 h-2 rounded-full bg-emerald-500 mt-2 flex-shrink-0"></div>
+        <div class="flex items-start gap-3 pb-3 border-b border-surface-100 last:border-b-0">
+          <div class="w-2 h-2 rounded-full bg-brand-500 mt-2 shrink-0"></div>
           <div class="flex-1 text-sm">
-            <p class="font-medium text-slate-900">${p.name} upgraded to ${p.tier}</p>
-            <p class="text-xs text-slate-500">${new Date(p.created_at).toLocaleDateString()} at ${new Date(p.created_at).toLocaleTimeString()}</p>
+            <p class="font-medium text-brand-950">${esc(p.name)} a trecut pe ${tierLabels[p.tier] || p.tier}</p>
+            <p class="text-xs text-surface-400">${new Date(p.created_at).toLocaleDateString('ro-RO')} la ${new Date(p.created_at).toLocaleTimeString('ro-RO', { hour: '2-digit', minute: '2-digit' })}</p>
           </div>
-          <span class="text-sm font-semibold text-slate-900">$${(p.amount / 100).toFixed(2)}</span>
+          <span class="text-sm font-semibold text-brand-900">${(p.amount / 100).toFixed(0)} lei</span>
         </div>
-      `).join('') || '<p class="text-slate-600 text-sm">No recent activity</p>';
+      `).join('') || '<p class="text-surface-400 text-sm">Nicio activitate recentă</p>';
     }
 
-    // Event listeners
+    async function confirmPayment(id) {
+      try {
+        const res = await fetch(`/api/admin/payments/${id}/confirm`, { method: 'POST' });
+        const data = await res.json();
+        showToast(data.message || 'Plată confirmată!', 'success');
+        loadPayments();
+      } catch { showToast('Eroare la confirmare.', 'error'); }
+    }
+
+    async function rejectPayment(id) {
+      if (!confirm('Sigur dorești să respingi această plată?')) return;
+      try {
+        const res = await fetch(`/api/admin/payments/${id}/reject`, { method: 'POST' });
+        const data = await res.json();
+        showToast(data.message || 'Plată respinsă.', 'error');
+        loadPayments();
+      } catch { showToast('Eroare la respingere.', 'error'); }
+    }
+
+    function showToast(msg, type) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = type === 'success'
+        ? 'fixed bottom-6 right-6 z-50 rounded-xl border border-brand-200 bg-brand-50 text-brand-800 px-5 py-3 text-sm font-medium shadow-lg'
+        : 'fixed bottom-6 right-6 z-50 rounded-xl border border-red-200 bg-red-50 text-red-800 px-5 py-3 text-sm font-medium shadow-lg';
+      setTimeout(() => t.classList.add('hidden'), 3000);
+    }
+
+    function esc(s) { const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    // Events
     document.getElementById('searchInput').addEventListener('input', renderPayments);
     document.getElementById('statusFilter').addEventListener('change', renderPayments);
     document.getElementById('tierFilter').addEventListener('change', renderPayments);
     document.getElementById('refreshBtn').addEventListener('click', loadPayments);
-
     document.getElementById('logoutBtn').addEventListener('click', async () => {
       await fetch('/api/auth/logout', { method: 'POST' });
       window.location.href = '/login.html';
     });
 
     // Load admin name
-    async function loadAdminInfo() {
-      try {
-        const res = await fetch('/api/auth/me');
-        const data = await res.json();
-        if (data.user) {
-          document.getElementById('adminName').textContent = data.user.name;
-        }
-      } catch (error) {
-        console.error('Error loading admin info:', error);
-      }
-    }
+    fetch('/api/auth/me').then(r => r.json()).then(d => {
+      if (d.user) document.getElementById('adminName').textContent = d.user.name;
+    }).catch(() => {});
 
-    loadAdminInfo();
     loadPayments();
   </script>
 </body>

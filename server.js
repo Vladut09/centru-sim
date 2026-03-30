@@ -19,11 +19,11 @@ const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test_1
 const PAYMENT_DOMAIN = process.env.PAYMENT_DOMAIN || 'http://localhost:3000';
 const stripe = new Stripe(STRIPE_SECRET_KEY);
 
-// Payment tier configuration
+// Payment tier configuration (prices in bani — RON smallest unit)
 const PAYMENT_TIERS = {
-  free: { name: 'Free', price: 0, interval: null },
-  premium: { name: 'Premium', price: 999, interval: 'month' }, // $9.99/month in cents
-  pro: { name: 'Pro', price: 2999, interval: 'month' } // $29.99/month in cents
+  free:     { name: 'Gratuit',  price: 0,    interval: null },
+  standard: { name: 'Standard', price: 4900, interval: 'month' }, // 49 lei/lună
+  premium:  { name: 'Premium',  price: 8900, interval: 'month' }  // 89 lei/lună
 };
 
 // ─── Ensure directories ────────────────────────────────────────────────────────
@@ -82,7 +82,7 @@ db.exec(`
     user_id INTEGER NOT NULL,
     stripe_payment_intent_id TEXT UNIQUE,
     amount INTEGER NOT NULL,
-    currency TEXT DEFAULT 'usd',
+    currency TEXT DEFAULT 'ron',
     payment_method TEXT NOT NULL,
     status TEXT NOT NULL DEFAULT 'pending',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -116,6 +116,13 @@ db.exec(`
     FOREIGN KEY (user_id) REFERENCES users(id)
   );
 `);
+
+// ─── Migrations (add columns that may not exist in older DBs) ─────────────────
+const existingCols = db.prepare("PRAGMA table_info(users)").all().map(c => c.name);
+if (!existingCols.includes('tier')) {
+  db.exec("ALTER TABLE users ADD COLUMN tier TEXT NOT NULL DEFAULT 'free'");
+  console.log('Migration: added tier column to users table');
+}
 
 // ─── Seed admin account ────────────────────────────────────────────────────────
 const adminEmail = 'admin@evalprep.ro';
@@ -487,18 +494,18 @@ app.get('/api/payment/config', requireAuth, (req, res) => {
 });
 
 // Create a checkout session
-app.post('/api/payment/checkout', requireAuth, (req, res) => {
+app.post('/api/payment/checkout', requireAuth, async (req, res) => {
   const { tier, paymentMethod } = req.body;
   if (!tier || !Object.keys(PAYMENT_TIERS).includes(tier)) {
-    return res.status(400).json({ error: 'Invalid payment tier.' });
+    return res.status(400).json({ error: 'Plan invalid.' });
   }
 
   const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
   const tierInfo = PAYMENT_TIERS[tier];
 
   try {
+    // ── Free tier — no payment needed ──
     if (tier === 'free') {
-      // Free tier - no payment needed
       db.prepare('UPDATE users SET tier = ? WHERE id = ?').run('free', req.session.userId);
       db.prepare('INSERT OR REPLACE INTO subscriptions (user_id, tier, status) VALUES (?, ?, ?)')
         .run(req.session.userId, 'free', 'active');
@@ -506,41 +513,81 @@ app.post('/api/payment/checkout', requireAuth, (req, res) => {
     }
 
     if (!paymentMethod) {
-      return res.status(400).json({ error: 'Payment method required.' });
+      return res.status(400).json({ error: 'Selectează o metodă de plată.' });
     }
 
-    // Create payment intent for one-time payment or subscription
-    if (tierInfo.interval) {
-      // Create subscription
-      const session = stripe.checkout.sessions.create({
-        customer_email: user.email,
-        line_items: [
-          {
-            price_data: {
-              currency: 'usd',
-              product_data: { name: `${tierInfo.name} Subscription` },
-              recurring: { interval: tierInfo.interval },
-              unit_amount: tierInfo.price
-            },
-            quantity: 1
-          }
-        ],
-        mode: 'subscription',
-        success_url: `${PAYMENT_DOMAIN}/payment-success.html?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${PAYMENT_DOMAIN}/payment.html?tier=${tier}`
+    // ── Cash / Bank Transfer — record pending, admin confirms manually ──
+    if (paymentMethod === 'cash') {
+      const ref = `CASH-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`;
+      db.prepare(
+        'INSERT INTO payments (user_id, stripe_payment_intent_id, amount, currency, payment_method, status) VALUES (?, ?, ?, ?, ?, ?)'
+      ).run(req.session.userId, ref, tierInfo.price, 'ron', 'cash', 'pending');
+
+      return res.json({
+        success: true,
+        method: 'cash',
+        reference: ref,
+        message: `Plata prin transfer bancar a fost înregistrată. Referință: ${ref}. Contul tău va fi activat după confirmarea plății.`
       });
-
-      // Store temporary session
-      db.prepare('INSERT INTO payments (user_id, stripe_payment_intent_id, amount, payment_method, status) VALUES (?, ?, ?, ?, ?)')
-        .run(req.session.userId, session.id, tierInfo.price, paymentMethod, 'pending');
-
-      res.json({ success: true, sessionId: session.id, url: session.url });
-    } else {
-      res.status(400).json({ error: 'One-time payments not implemented.' });
     }
+
+    // ── Card or PayPal — Stripe Checkout ──
+    const paymentMethodTypes = paymentMethod === 'paypal' ? ['paypal'] : ['card'];
+
+    const session = await stripe.checkout.sessions.create({
+      customer_email: user.email,
+      payment_method_types: paymentMethodTypes,
+      line_items: [
+        {
+          price_data: {
+            currency: 'ron',
+            product_data: { name: `EvalPrep ${tierInfo.name}` },
+            recurring: { interval: tierInfo.interval },
+            unit_amount: tierInfo.price
+          },
+          quantity: 1
+        }
+      ],
+      mode: 'subscription',
+      metadata: { tier, userId: String(req.session.userId) },
+      success_url: `${PAYMENT_DOMAIN}/payment-success.html?session_id={CHECKOUT_SESSION_ID}&tier=${tier}`,
+      cancel_url: `${PAYMENT_DOMAIN}/payment.html?tier=${tier}`
+    });
+
+    db.prepare(
+      'INSERT INTO payments (user_id, stripe_payment_intent_id, amount, currency, payment_method, status) VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(req.session.userId, session.id, tierInfo.price, 'ron', paymentMethod, 'pending');
+
+    res.json({ success: true, sessionId: session.id, url: session.url });
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
+});
+
+// Admin: confirm a cash/bank-transfer payment
+app.post('/api/admin/payments/:id/confirm', requireAdmin, (req, res) => {
+  const payment = db.prepare('SELECT * FROM payments WHERE id = ?').get(req.params.id);
+  if (!payment) return res.status(404).json({ error: 'Plată negăsită.' });
+  if (payment.status === 'succeeded') return res.status(400).json({ error: 'Plata este deja confirmată.' });
+
+  // Determine tier from amount
+  let tier = 'standard';
+  if (payment.amount === 8900) tier = 'premium';
+
+  db.prepare('UPDATE payments SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run('succeeded', payment.id);
+  db.prepare('UPDATE users SET tier = ? WHERE id = ?').run(tier, payment.user_id);
+  db.prepare('INSERT INTO subscriptions (user_id, tier, status) VALUES (?, ?, ?)').run(payment.user_id, tier, 'active');
+
+  res.json({ success: true, message: `Plata confirmată. Utilizatorul a fost trecut pe planul ${tier}.` });
+});
+
+// Admin: reject a payment
+app.post('/api/admin/payments/:id/reject', requireAdmin, (req, res) => {
+  const payment = db.prepare('SELECT * FROM payments WHERE id = ?').get(req.params.id);
+  if (!payment) return res.status(404).json({ error: 'Plată negăsită.' });
+
+  db.prepare('UPDATE payments SET status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?').run('failed', payment.id);
+  res.json({ success: true, message: 'Plata a fost respinsă.' });
 });
 
 // Handle Stripe webhook
