@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment - EvalPrep</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap');
+    body { font-family: 'Sora', sans-serif; }
+    .card-hover { transition: all 0.3s ease; }
+    .card-hover:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.15); }
+    .badge-success { @apply bg-emerald-50 text-emerald-700 border border-emerald-200; }
+    .badge-active { @apply bg-blue-50 text-blue-700 border border-blue-200; }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 min-h-screen">
+  <div class="max-w-6xl mx-auto px-4 py-12">
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <div class="flex items-center justify-between mb-8">
+        <a href="/" class="text-slate-600 hover:text-slate-900 font-medium">← Back</a>
+        <h1 class="text-4xl font-bold text-slate-900">Choose Your Plan</h1>
+        <div id="userGreeting" class="text-sm text-slate-600"></div>
+      </div>
+      <p class="text-lg text-slate-600">Select the plan that best fits your needs. Upgrade or downgrade anytime.</p>
+    </div>
+
+    <!-- Tier Selection Cards -->
+    <div class="grid md:grid-cols-3 gap-6 mb-12">
+      <!-- Free Tier -->
+      <div class="card-hover rounded-xl border-2 border-slate-200 p-8 bg-white relative" id="tierCard_free">
+        <div class="absolute top-4 right-4" id="freeBadge"></div>
+        <h2 class="text-2xl font-bold text-slate-900 mb-2">Free</h2>
+        <p class="text-slate-600 mb-6">Get started with essential features</p>
+
+        <div class="mb-8">
+          <span class="text-4xl font-bold text-slate-900">$0</span>
+          <span class="text-slate-600 ml-2">/month</span>
+        </div>
+
+        <ul class="space-y-3 mb-8">
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            <span class="text-slate-700">2 free simulations</span>
+          </li>
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            <span class="text-slate-700">Basic analytics</span>
+          </li>
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            <span class="text-slate-700">Community support</span>
+          </li>
+        </ul>
+
+        <button class="selectTierBtn w-full py-3 rounded-lg font-semibold transition-all"
+                data-tier="free" id="btn_free">
+          Select Plan
+        </button>
+      </div>
+
+      <!-- Premium Tier -->
+      <div class="card-hover rounded-xl border-2 border-blue-300 p-8 bg-white relative ring-2 ring-blue-100" id="tierCard_premium">
+        <div class="absolute top-4 right-4 bg-blue-500 text-white px-3 py-1 rounded-full text-xs font-semibold">POPULAR</div>
+        <h2 class="text-2xl font-bold text-slate-900 mb-2">Premium</h2>
+        <p class="text-slate-600 mb-6">For serious learners</p>
+
+        <div class="mb-8">
+          <span class="text-4xl font-bold text-slate-900">$9.99</span>
+          <span class="text-slate-600 ml-2">/month</span>
+        </div>
+
+        <ul class="space-y-3 mb-8">
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            <span class="text-slate-700">Unlimited simulations</span>
+          </li>
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            <span class="text-slate-700">Advanced analytics</span>
+          </li>
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            <span class="text-slate-700">Email support</span>
+          </li>
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            <span class="text-slate-700">Progress tracking</span>
+          </li>
+        </ul>
+
+        <button class="selectTierBtn w-full py-3 rounded-lg font-semibold transition-all bg-blue-500 text-white hover:bg-blue-600"
+                data-tier="premium" id="btn_premium">
+          Select Plan
+        </button>
+      </div>
+
+      <!-- Pro Tier -->
+      <div class="card-hover rounded-xl border-2 border-slate-200 p-8 bg-white relative" id="tierCard_pro">
+        <div class="absolute top-4 right-4" id="proBadge"></div>
+        <h2 class="text-2xl font-bold text-slate-900 mb-2">Pro</h2>
+        <p class="text-slate-600 mb-6">For dedicated professionals</p>
+
+        <div class="mb-8">
+          <span class="text-4xl font-bold text-slate-900">$29.99</span>
+          <span class="text-slate-600 ml-2">/month</span>
+        </div>
+
+        <ul class="space-y-3 mb-8">
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            <span class="text-slate-700">Everything in Premium</span>
+          </li>
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            <span class="text-slate-700">Custom reports</span>
+          </li>
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            <span class="text-slate-700">Priority support</span>
+          </li>
+          <li class="flex items-start">
+            <svg class="w-5 h-5 text-emerald-500 mr-3 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/>
+            </svg>
+            <span class="text-slate-700">API access</span>
+          </li>
+        </ul>
+
+        <button class="selectTierBtn w-full py-3 rounded-lg font-semibold transition-all"
+                data-tier="pro" id="btn_pro">
+          Select Plan
+        </button>
+      </div>
+    </div>
+
+    <!-- Payment Method Selection (shown after tier selection) -->
+    <div id="paymentMethodSection" class="hidden bg-white rounded-xl border border-slate-200 p-8 mb-8">
+      <h2 class="text-2xl font-bold text-slate-900 mb-8">Select Payment Method</h2>
+
+      <div class="grid md:grid-cols-3 gap-4 mb-8">
+        <!-- Credit Card -->
+        <label class="card-hover cursor-pointer rounded-lg border-2 border-slate-200 p-6 transition-all hover:border-blue-400 hover:bg-blue-50 has-checked:border-blue-500 has-checked:bg-blue-50">
+          <input type="radio" name="paymentMethod" value="card" class="hidden" checked>
+          <div class="flex items-center mb-2">
+            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="font-semibold text-slate-900">Credit Card</h3>
+              <p class="text-xs text-slate-600">Visa, Mastercard, Amex</p>
+            </div>
+          </div>
+        </label>
+
+        <!-- PayPal -->
+        <label class="card-hover cursor-pointer rounded-lg border-2 border-slate-200 p-6 transition-all hover:border-blue-400 hover:bg-blue-50 has-checked:border-blue-500 has-checked:bg-blue-50">
+          <input type="radio" name="paymentMethod" value="paypal" class="hidden">
+          <div class="flex items-center mb-2">
+            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M9.12 7.5H14.88C15.5 7.5 16 8 16 8.62V15.38C16 16 15.5 16.5 14.88 16.5H9.12C8.5 16.5 8 16 8 15.38V8.62C8 8 8.5 7.5 9.12 7.5Z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="font-semibold text-slate-900">PayPal</h3>
+              <p class="text-xs text-slate-600">Fast & secure</p>
+            </div>
+          </div>
+        </label>
+
+        <!-- Cash -->
+        <label class="card-hover cursor-pointer rounded-lg border-2 border-slate-200 p-6 transition-all hover:border-blue-400 hover:bg-blue-50 has-checked:border-blue-500 has-checked:bg-blue-50">
+          <input type="radio" name="paymentMethod" value="cash" class="hidden">
+          <div class="flex items-center mb-2">
+            <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3">
+              <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="font-semibold text-slate-900">Bank Transfer</h3>
+              <p class="text-xs text-slate-600">Direct bank payment</p>
+            </div>
+          </div>
+        </label>
+      </div>
+
+      <!-- Card Details (for credit card only) -->
+      <div id="cardDetailsSection" class="mb-8">
+        <div class="rounded-lg border border-slate-200 p-6 bg-slate-50">
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-slate-900 mb-2">Card Number</label>
+            <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" maxlength="19">
+          </div>
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-sm font-semibold text-slate-900 mb-2">Expiry</label>
+              <input type="text" id="cardExpiry" placeholder="MM/YY" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" maxlength="5">
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-slate-900 mb-2">CVC</label>
+              <input type="text" id="cardCvc" placeholder="123" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500" maxlength="4">
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-slate-900 mb-2">Cardholder Name</label>
+            <input type="text" id="cardName" placeholder="John Doe" class="w-full px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex gap-4">
+        <button id="cancelPaymentBtn" class="px-6 py-3 rounded-lg border border-slate-300 text-slate-900 font-semibold hover:bg-slate-50 transition-all">
+          Back
+        </button>
+        <button id="proceedPaymentBtn" class="flex-1 px-6 py-3 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-600 transition-all">
+          Proceed to Payment
+        </button>
+      </div>
+    </div>
+
+    <!-- Messages -->
+    <div id="messageBox" class="hidden mb-8"></div>
+  </div>
+
+  <script>
+    let selectedTier = null;
+    let paymentConfig = null;
+
+    // Load payment configuration
+    async function loadPaymentConfig() {
+      const res = await fetch('/api/payment/config');
+      paymentConfig = await res.json();
+      updateUIWithCurrentTier();
+    }
+
+    // Update UI to show current tier
+    function updateUIWithCurrentTier() {
+      const current = paymentConfig.currentTier;
+
+      // Show badge for current tier
+      document.getElementById('freeBadge').innerHTML =
+        current === 'free' ? '<span class="badge-active px-3 py-1 rounded-full text-xs font-semibold">CURRENT</span>' : '';
+      document.getElementById('proBadge').innerHTML = '';
+
+      // Update button states
+      ['free', 'premium', 'pro'].forEach(tier => {
+        const btn = document.getElementById(`btn_${tier}`);
+        if (current === tier) {
+          btn.textContent = 'Current Plan';
+          btn.classList.add('opacity-50', 'cursor-not-allowed');
+          btn.disabled = true;
+        } else {
+          btn.textContent = 'Select Plan';
+          btn.classList.remove('opacity-50', 'cursor-not-allowed');
+          btn.disabled = false;
+        }
+      });
+    }
+
+    // Tier selection
+    document.querySelectorAll('.selectTierBtn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        selectedTier = e.target.dataset.tier;
+
+        if (selectedTier === 'free') {
+          // Free tier - direct upgrade
+          upgradeToFree();
+        } else {
+          // Paid tiers - show payment method selection
+          document.getElementById('paymentMethodSection').classList.remove('hidden');
+          document.querySelector('.grid.md\\:grid-cols-3').scrollIntoView({ behavior: 'smooth' });
+        }
+      });
+    });
+
+    // Payment method radio change
+    document.querySelectorAll('input[name="paymentMethod"]').forEach(radio => {
+      radio.addEventListener('change', (e) => {
+        const cardSection = document.getElementById('cardDetailsSection');
+        if (e.target.value === 'card') {
+          cardSection.classList.remove('hidden');
+        } else {
+          cardSection.classList.add('hidden');
+        }
+      });
+    });
+
+    // Cancel payment
+    document.getElementById('cancelPaymentBtn').addEventListener('click', () => {
+      document.getElementById('paymentMethodSection').classList.add('hidden');
+      selectedTier = null;
+    });
+
+    // Proceed to payment
+    document.getElementById('proceedPaymentBtn').addEventListener('click', async () => {
+      const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+
+      showMessage('Processing...', 'info');
+
+      try {
+        const res = await fetch('/api/payment/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tier: selectedTier, paymentMethod })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          showMessage(data.error, 'error');
+          return;
+        }
+
+        if (data.url) {
+          // Redirect to Stripe checkout
+          window.location.href = data.url;
+        } else {
+          showMessage('Payment successful! Tier updated.', 'success');
+          setTimeout(() => location.reload(), 2000);
+        }
+      } catch (error) {
+        showMessage(error.message, 'error');
+      }
+    });
+
+    // Format card number
+    document.getElementById('cardNumber').addEventListener('input', (e) => {
+      e.target.value = e.target.value.replace(/\s/g, '').replace(/(.{4})/g, '$1 ').trim();
+    });
+
+    // Format expiry
+    document.getElementById('cardExpiry').addEventListener('input', (e) => {
+      const val = e.target.value.replace(/\D/g, '');
+      if (val.length >= 2) {
+        e.target.value = val.slice(0, 2) + '/' + val.slice(2, 4);
+      } else {
+        e.target.value = val;
+      }
+    });
+
+    // Show message
+    function showMessage(text, type = 'info') {
+      const box = document.getElementById('messageBox');
+      const bgClass = type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-800' :
+                      type === 'error' ? 'bg-red-50 border-red-200 text-red-800' :
+                      'bg-blue-50 border-blue-200 text-blue-800';
+
+      box.innerHTML = `<div class="rounded-lg border ${bgClass} p-4">${text}</div>`;
+      box.classList.remove('hidden');
+    }
+
+    // Upgrade to free
+    async function upgradeToFree() {
+      showMessage('Processing...', 'info');
+
+      try {
+        const res = await fetch('/api/payment/checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tier: 'free', paymentMethod: 'none' })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          showMessage('Welcome to the Free tier!', 'success');
+          setTimeout(() => location.reload(), 2000);
+        }
+      } catch (error) {
+        showMessage(error.message, 'error');
+      }
+    }
+
+    loadPaymentConfig();
+  </script>
+</body>
+</html>

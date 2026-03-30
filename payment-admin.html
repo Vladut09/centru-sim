@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment Management - Admin - EvalPrep</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap');
+    body { font-family: 'Sora', sans-serif; }
+    .table-row:hover { background-color: rgb(248, 250, 252); }
+    .badge { @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold; }
+    .badge-success { @apply bg-emerald-100 text-emerald-800; }
+    .badge-pending { @apply bg-yellow-100 text-yellow-800; }
+    .badge-failed { @apply bg-red-100 text-red-800; }
+    .badge-premium { @apply bg-purple-100 text-purple-800; }
+    .badge-pro { @apply bg-blue-100 text-blue-800; }
+  </style>
+</head>
+<body class="bg-slate-50 min-h-screen">
+  <!-- Navigation -->
+  <nav class="bg-white border-b border-slate-200 sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <h1 class="text-2xl font-bold text-slate-900">💳 Payment Admin</h1>
+      </div>
+      <div class="flex items-center gap-4">
+        <span class="text-sm text-slate-600" id="adminName">Admin</span>
+        <button id="logoutBtn" class="text-sm text-slate-600 hover:text-slate-900 font-medium">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Header Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <!-- Total Revenue -->
+      <div class="bg-white rounded-lg border border-slate-200 p-6">
+        <p class="text-slate-600 text-sm font-medium mb-2">Total Revenue (30 days)</p>
+        <p class="text-3xl font-bold text-slate-900" id="totalRevenue">$0</p>
+        <p class="text-xs text-slate-500 mt-2" id="revenueChange">+0% from last month</p>
+      </div>
+
+      <!-- Active Subscriptions -->
+      <div class="bg-white rounded-lg border border-slate-200 p-6">
+        <p class="text-slate-600 text-sm font-medium mb-2">Active Subscriptions</p>
+        <p class="text-3xl font-bold text-slate-900" id="activeSubscriptions">0</p>
+        <p class="text-xs text-slate-500 mt-2">Premium & Pro tiers</p>
+      </div>
+
+      <!-- Successful Payments -->
+      <div class="bg-white rounded-lg border border-slate-200 p-6">
+        <p class="text-slate-600 text-sm font-medium mb-2">Successful Payments</p>
+        <p class="text-3xl font-bold text-slate-900" id="successfulPayments">0</p>
+        <p class="text-xs text-slate-500 mt-2">Total all-time</p>
+      </div>
+
+      <!-- Failed Payments -->
+      <div class="bg-white rounded-lg border border-slate-200 p-6">
+        <p class="text-slate-600 text-sm font-medium mb-2">Failed Payments</p>
+        <p class="text-3xl font-bold text-red-600" id="failedPayments">0</p>
+        <p class="text-xs text-slate-500 mt-2">Requiring attention</p>
+      </div>
+    </div>
+
+    <!-- Filters & Search -->
+    <div class="bg-white rounded-lg border border-slate-200 p-6 mb-8">
+      <div class="flex flex-col md:flex-row gap-4">
+        <input type="text" id="searchInput" placeholder="Search by email or name..." class="flex-1 px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <select id="statusFilter" class="px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="">All Statuses</option>
+          <option value="succeeded">Succeeded</option>
+          <option value="pending">Pending</option>
+          <option value="failed">Failed</option>
+        </select>
+        <select id="tierFilter" class="px-4 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="">All Tiers</option>
+          <option value="free">Free</option>
+          <option value="premium">Premium</option>
+          <option value="pro">Pro</option>
+        </select>
+        <button id="refreshBtn" class="px-6 py-2 rounded-lg bg-blue-500 text-white font-medium hover:bg-blue-600 transition-all">
+          Refresh
+        </button>
+      </div>
+    </div>
+
+    <!-- Payments Table -->
+    <div class="bg-white rounded-lg border border-slate-200 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-slate-50 border-b border-slate-200">
+            <tr>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-slate-900">User</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-slate-900">Email</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-slate-900">Tier</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-slate-900">Amount</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-slate-900">Status</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-slate-900">Sub Status</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-slate-900">Date</th>
+              <th class="px-6 py-3 text-left text-xs font-semibold text-slate-900">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="paymentsTable" class="divide-y divide-slate-200">
+            <tr class="table-row">
+              <td colspan="8" class="px-6 py-8 text-center text-slate-600">Loading payments...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="hidden text-center py-12 px-6">
+        <svg class="w-12 h-12 text-slate-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <p class="text-slate-600 font-medium">No payments found</p>
+      </div>
+    </div>
+
+    <!-- Subscription Status Breakdown -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+      <!-- Subscription Distribution -->
+      <div class="bg-white rounded-lg border border-slate-200 p-6">
+        <h3 class="font-bold text-slate-900 mb-4">Subscription Distribution</h3>
+        <div class="space-y-3">
+          <div>
+            <div class="flex justify-between text-sm mb-1">
+              <span class="text-slate-600">Premium</span>
+              <span class="font-semibold text-slate-900" id="premiumCount">0</span>
+            </div>
+            <div class="w-full bg-slate-200 rounded-full h-2">
+              <div class="bg-purple-500 h-2 rounded-full" id="premiumBar" style="width: 0%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between text-sm mb-1">
+              <span class="text-slate-600">Pro</span>
+              <span class="font-semibold text-slate-900" id="proCount">0</span>
+            </div>
+            <div class="w-full bg-slate-200 rounded-full h-2">
+              <div class="bg-blue-500 h-2 rounded-full" id="proBar" style="width: 0%"></div>
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between text-sm mb-1">
+              <span class="text-slate-600">Free</span>
+              <span class="font-semibold text-slate-900" id="freeCount">0</span>
+            </div>
+            <div class="w-full bg-slate-200 rounded-full h-2">
+              <div class="bg-slate-500 h-2 rounded-full" id="freeBar" style="width: 0%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Payments -->
+      <div class="md:col-span-2 bg-white rounded-lg border border-slate-200 p-6">
+        <h3 class="font-bold text-slate-900 mb-4">Recent Payment Activity</h3>
+        <div id="activityFeed" class="space-y-3">
+          <p class="text-slate-600 text-sm">Loading activity...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allPayments = [];
+
+    // Load admin data
+    async function loadPayments() {
+      try {
+        const res = await fetch('/api/admin/payments');
+        const data = await res.json();
+
+        if (!res.ok) {
+          console.error('Error:', data.error);
+          return;
+        }
+
+        allPayments = data.payments || [];
+        renderPayments();
+        updateStats();
+      } catch (error) {
+        console.error('Error loading payments:', error);
+      }
+    }
+
+    // Render payments table
+    function renderPayments() {
+      const table = document.getElementById('paymentsTable');
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const statusFilter = document.getElementById('statusFilter').value;
+      const tierFilter = document.getElementById('tierFilter').value;
+
+      let filtered = allPayments.filter(p => {
+        const matchesSearch = !searchTerm ||
+          p.email.toLowerCase().includes(searchTerm) ||
+          p.name.toLowerCase().includes(searchTerm);
+        const matchesStatus = !statusFilter || p.status === statusFilter;
+        const matchesTier = !tierFilter || p.tier === tierFilter;
+        return matchesSearch && matchesStatus && matchesTier;
+      });
+
+      if (filtered.length === 0) {
+        table.innerHTML = '';
+        document.getElementById('emptyState').classList.remove('hidden');
+        return;
+      }
+
+      document.getElementById('emptyState').classList.add('hidden');
+      table.innerHTML = filtered.map(payment => `
+        <tr class="table-row">
+          <td class="px-6 py-4 text-sm font-medium text-slate-900">${payment.name}</td>
+          <td class="px-6 py-4 text-sm text-slate-600">${payment.email}</td>
+          <td class="px-6 py-4 text-sm">
+            <span class="badge ${payment.tier === 'premium' ? 'badge-premium' : payment.tier === 'pro' ? 'badge-pro' : 'bg-slate-100 text-slate-800'}">
+              ${payment.tier?.charAt(0).toUpperCase() + payment.tier?.slice(1) || 'Free'}
+            </span>
+          </td>
+          <td class="px-6 py-4 text-sm font-semibold text-slate-900">$${(payment.amount / 100).toFixed(2)}</td>
+          <td class="px-6 py-4 text-sm">
+            <span class="badge ${payment.status === 'succeeded' ? 'badge-success' : payment.status === 'pending' ? 'badge-pending' : 'badge-failed'}">
+              ${payment.status?.charAt(0).toUpperCase() + payment.status?.slice(1)}
+            </span>
+          </td>
+          <td class="px-6 py-4 text-sm">
+            ${payment.subscription_status ? `<span class="badge ${payment.subscription_status === 'active' ? 'badge-success' : 'badge-failed'}">${payment.subscription_status}</span>` : '—'}
+          </td>
+          <td class="px-6 py-4 text-sm text-slate-600">${new Date(payment.created_at).toLocaleDateString()}</td>
+          <td class="px-6 py-4 text-sm">
+            <button class="text-blue-500 hover:text-blue-700 font-semibold text-xs">View</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // Update statistics
+    function updateStats() {
+      const succeeded = allPayments.filter(p => p.status === 'succeeded');
+      const failed = allPayments.filter(p => p.status === 'failed');
+      const totalRevenue = succeeded.reduce((sum, p) => sum + (p.amount || 0), 0);
+
+      // Update cards
+      document.getElementById('totalRevenue').textContent = '$' + (totalRevenue / 100).toFixed(2);
+      document.getElementById('activeSubscriptions').textContent = allPayments.filter(p => p.subscription_status === 'active').length;
+      document.getElementById('successfulPayments').textContent = succeeded.length;
+      document.getElementById('failedPayments').textContent = failed.length;
+
+      // Update distribution
+      const premiumCount = allPayments.filter(p => p.tier === 'premium').length;
+      const proCount = allPayments.filter(p => p.tier === 'pro').length;
+      const freeCount = allPayments.filter(p => p.tier === 'free').length;
+      const total = allPayments.length || 1;
+
+      document.getElementById('premiumCount').textContent = premiumCount;
+      document.getElementById('premiumBar').style.width = (premiumCount / total * 100) + '%';
+
+      document.getElementById('proCount').textContent = proCount;
+      document.getElementById('proBar').style.width = (proCount / total * 100) + '%';
+
+      document.getElementById('freeCount').textContent = freeCount;
+      document.getElementById('freeBar').style.width = (freeCount / total * 100) + '%';
+
+      // Activity feed
+      const recent = succeeded.slice(0, 5);
+      document.getElementById('activityFeed').innerHTML = recent.map(p => `
+        <div class="flex items-start gap-3 pb-3 border-b border-slate-100 last:border-b-0">
+          <div class="w-2 h-2 rounded-full bg-emerald-500 mt-2 flex-shrink-0"></div>
+          <div class="flex-1 text-sm">
+            <p class="font-medium text-slate-900">${p.name} upgraded to ${p.tier}</p>
+            <p class="text-xs text-slate-500">${new Date(p.created_at).toLocaleDateString()} at ${new Date(p.created_at).toLocaleTimeString()}</p>
+          </div>
+          <span class="text-sm font-semibold text-slate-900">$${(p.amount / 100).toFixed(2)}</span>
+        </div>
+      `).join('') || '<p class="text-slate-600 text-sm">No recent activity</p>';
+    }
+
+    // Event listeners
+    document.getElementById('searchInput').addEventListener('input', renderPayments);
+    document.getElementById('statusFilter').addEventListener('change', renderPayments);
+    document.getElementById('tierFilter').addEventListener('change', renderPayments);
+    document.getElementById('refreshBtn').addEventListener('click', loadPayments);
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      window.location.href = '/login.html';
+    });
+
+    // Load admin name
+    async function loadAdminInfo() {
+      try {
+        const res = await fetch('/api/auth/me');
+        const data = await res.json();
+        if (data.user) {
+          document.getElementById('adminName').textContent = data.user.name;
+        }
+      } catch (error) {
+        console.error('Error loading admin info:', error);
+      }
+    }
+
+    loadAdminInfo();
+    loadPayments();
+  </script>
+</body>
+</html>

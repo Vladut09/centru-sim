@@ -7,10 +7,24 @@ import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
 import { fileURLToPath } from 'url';
+import Stripe from 'stripe';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = 3000;
+
+// ─── Stripe Configuration ──────────────────────────────────────────────────────
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || 'sk_test_51234567890';
+const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || 'whsec_test_1234567890';
+const PAYMENT_DOMAIN = process.env.PAYMENT_DOMAIN || 'http://localhost:3000';
+const stripe = new Stripe(STRIPE_SECRET_KEY);
+
+// Payment tier configuration
+const PAYMENT_TIERS = {
+  free: { name: 'Free', price: 0, interval: null },
+  premium: { name: 'Premium', price: 999, interval: 'month' }, // $9.99/month in cents
+  pro: { name: 'Pro', price: 2999, interval: 'month' } // $29.99/month in cents
+};
 
 // ─── Ensure directories ────────────────────────────────────────────────────────
 const dirs = ['db', 'uploads/pdfs', 'uploads/submissions'];
@@ -28,6 +42,7 @@ db.exec(`
     email TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL DEFAULT 'student',
+    tier TEXT NOT NULL DEFAULT 'free',
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
@@ -60,6 +75,45 @@ db.exec(`
     original_name TEXT NOT NULL,
     uploaded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (session_id) REFERENCES sessions_exam(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS payments (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    stripe_payment_intent_id TEXT UNIQUE,
+    amount INTEGER NOT NULL,
+    currency TEXT DEFAULT 'usd',
+    payment_method TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS subscriptions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    stripe_subscription_id TEXT UNIQUE,
+    tier TEXT NOT NULL DEFAULT 'free',
+    status TEXT NOT NULL DEFAULT 'active',
+    current_period_start DATETIME,
+    current_period_end DATETIME,
+    cancel_at_period_end INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+  );
+
+  CREATE TABLE IF NOT EXISTS payment_methods (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    stripe_payment_method_id TEXT UNIQUE,
+    type TEXT NOT NULL,
+    brand TEXT,
+    last4 TEXT,
+    is_default INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
   );
 `);
 
@@ -415,6 +469,177 @@ app.get('/api/dashboard', requireAuth, (req, res) => {
   const completedSimulations = sessions.filter(s => s.status === 'completed').length;
 
   res.json({ user, sessions, stats: { totalSimulations, completedSimulations } });
+});
+
+// ─── PAYMENT ROUTES ────────────────────────────────────────────────────────────
+
+// Get payment tiers and current user subscription
+app.get('/api/payment/config', requireAuth, (req, res) => {
+  const user = db.prepare('SELECT tier FROM users WHERE id = ?').get(req.session.userId);
+  const subscription = db.prepare('SELECT * FROM subscriptions WHERE user_id = ? AND status = ? ORDER BY created_at DESC LIMIT 1')
+    .get(req.session.userId, 'active');
+
+  res.json({
+    tiers: PAYMENT_TIERS,
+    currentTier: user?.tier || 'free',
+    subscription: subscription || null
+  });
+});
+
+// Create a checkout session
+app.post('/api/payment/checkout', requireAuth, (req, res) => {
+  const { tier, paymentMethod } = req.body;
+  if (!tier || !Object.keys(PAYMENT_TIERS).includes(tier)) {
+    return res.status(400).json({ error: 'Invalid payment tier.' });
+  }
+
+  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.session.userId);
+  const tierInfo = PAYMENT_TIERS[tier];
+
+  try {
+    if (tier === 'free') {
+      // Free tier - no payment needed
+      db.prepare('UPDATE users SET tier = ? WHERE id = ?').run('free', req.session.userId);
+      db.prepare('INSERT OR REPLACE INTO subscriptions (user_id, tier, status) VALUES (?, ?, ?)')
+        .run(req.session.userId, 'free', 'active');
+      return res.json({ success: true, tier: 'free' });
+    }
+
+    if (!paymentMethod) {
+      return res.status(400).json({ error: 'Payment method required.' });
+    }
+
+    // Create payment intent for one-time payment or subscription
+    if (tierInfo.interval) {
+      // Create subscription
+      const session = stripe.checkout.sessions.create({
+        customer_email: user.email,
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              product_data: { name: `${tierInfo.name} Subscription` },
+              recurring: { interval: tierInfo.interval },
+              unit_amount: tierInfo.price
+            },
+            quantity: 1
+          }
+        ],
+        mode: 'subscription',
+        success_url: `${PAYMENT_DOMAIN}/payment-success.html?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${PAYMENT_DOMAIN}/payment.html?tier=${tier}`
+      });
+
+      // Store temporary session
+      db.prepare('INSERT INTO payments (user_id, stripe_payment_intent_id, amount, payment_method, status) VALUES (?, ?, ?, ?, ?)')
+        .run(req.session.userId, session.id, tierInfo.price, paymentMethod, 'pending');
+
+      res.json({ success: true, sessionId: session.id, url: session.url });
+    } else {
+      res.status(400).json({ error: 'One-time payments not implemented.' });
+    }
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Handle Stripe webhook
+app.post('/api/payment/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, STRIPE_WEBHOOK_SECRET);
+  } catch (error) {
+    return res.status(400).send(`Webhook Error: ${error.message}`);
+  }
+
+  try {
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object;
+      const payment = db.prepare('SELECT user_id FROM payments WHERE stripe_payment_intent_id = ?').get(session.id);
+
+      if (payment) {
+        const tier = session.metadata?.tier || 'premium';
+        db.prepare('UPDATE users SET tier = ? WHERE id = ?').run(tier, payment.user_id);
+        db.prepare('INSERT INTO subscriptions (user_id, stripe_subscription_id, tier, status) VALUES (?, ?, ?, ?)')
+          .run(payment.user_id, session.subscription, tier, 'active');
+        db.prepare('UPDATE payments SET status = ? WHERE stripe_payment_intent_id = ?').run('succeeded', session.id);
+      }
+    } else if (event.type === 'customer.subscription.deleted') {
+      const subscription = event.data.object;
+      db.prepare('UPDATE subscriptions SET status = ? WHERE stripe_subscription_id = ?').run('canceled', subscription.id);
+    } else if (event.type === 'customer.subscription.updated') {
+      const subscription = event.data.object;
+      db.prepare('UPDATE subscriptions SET status = ? WHERE stripe_subscription_id = ?')
+        .run(subscription.status, subscription.id);
+    }
+  } catch (error) {
+    console.error('Webhook processing error:', error);
+  }
+
+  res.json({ received: true });
+});
+
+// Get payment status
+app.get('/api/payment/status/:sessionId', requireAuth, (req, res) => {
+  try {
+    const session = stripe.checkout.sessions.retrieve(req.params.sessionId);
+    res.json({ status: session.payment_status, sessionId: session.id });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Get user subscription
+app.get('/api/subscriptions', requireAuth, (req, res) => {
+  const subscription = db.prepare(
+    'SELECT * FROM subscriptions WHERE user_id = ? AND status = ? ORDER BY created_at DESC LIMIT 1'
+  ).get(req.session.userId, 'active');
+
+  res.json({ subscription: subscription || null });
+});
+
+// Cancel subscription
+app.post('/api/subscriptions/cancel', requireAuth, (req, res) => {
+  const subscription = db.prepare(
+    'SELECT * FROM subscriptions WHERE user_id = ? AND status = ? ORDER BY created_at DESC LIMIT 1'
+  ).get(req.session.userId, 'active');
+
+  if (!subscription) {
+    return res.status(404).json({ error: 'No active subscription found.' });
+  }
+
+  try {
+    stripe.subscriptions.update(subscription.stripe_subscription_id, {
+      cancel_at_period_end: true
+    });
+
+    db.prepare('UPDATE subscriptions SET cancel_at_period_end = 1 WHERE id = ?').run(subscription.id);
+    res.json({ success: true, message: 'Subscription will be canceled at period end.' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// Admin: view all payments
+app.get('/api/admin/payments', requireAdmin, (req, res) => {
+  const payments = db.prepare(`
+    SELECT p.*, u.name, u.email, u.tier,
+           s.stripe_subscription_id, s.status as subscription_status
+    FROM payments p
+    JOIN users u ON p.user_id = u.id
+    LEFT JOIN subscriptions s ON u.id = s.user_id
+    ORDER BY p.created_at DESC
+  `).all();
+
+  res.json({ payments });
+});
+
+// Get saved payment methods for user
+app.get('/api/payment/methods', requireAuth, (req, res) => {
+  const methods = db.prepare('SELECT * FROM payment_methods WHERE user_id = ? ORDER BY is_default DESC').all(req.session.userId);
+  res.json({ methods });
 });
 
 // ─── Error handler ─────────────────────────────────────────────────────────────
