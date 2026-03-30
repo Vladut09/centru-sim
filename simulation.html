@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulare — EvalPrep</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50:'#f0f7f4',100:'#d9ede2',200:'#b5dbc7',300:'#85c2a4',400:'#56a57e',500:'#368763',600:'#276c4f',700:'#205741',800:'#1c4635',900:'#183a2d',950:'#0c2019' },
+            surface: { 50:'#fafbfc',100:'#f3f5f7',200:'#e8ecf0',300:'#d5dbe3',400:'#a8b3c0' },
+            accent: { warm:'#e8985e',warmLight:'#fdf3eb',sky:'#4a9eca',skyLight:'#edf6fb' }
+          },
+          fontFamily: { display:['"DM Serif Display"','serif'], body:['"Inter"','sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    h1,h2,h3,.font-display { font-family: 'DM Serif Display', serif; }
+    .card-elevated { box-shadow: 0 1px 2px rgba(54,135,99,0.04), 0 4px 12px rgba(54,135,99,0.06), 0 12px 32px rgba(54,135,99,0.04); }
+    .card-floating { box-shadow: 0 2px 4px rgba(54,135,99,0.05), 0 8px 24px rgba(54,135,99,0.08), 0 24px 48px rgba(54,135,99,0.06); }
+    .nav-blur { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+    .btn-primary:focus-visible { outline:none; box-shadow:0 0 0 3px rgba(54,135,99,0.3),0 0 0 1px rgba(54,135,99,0.8); }
+
+    /* Timer styles */
+    .timer-ring {
+      width: 180px; height: 180px;
+      border-radius: 50%;
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .timer-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+    .timer-ring circle {
+      fill: none; stroke-width: 6; stroke-linecap: round;
+      transition: stroke-dashoffset 1s linear;
+    }
+    .timer-ring .track { stroke: #e8ecf0; }
+    .timer-ring .progress { stroke: #368763; }
+    .timer-ring.warning .progress { stroke: #e8985e; }
+    .timer-ring.danger .progress { stroke: #dc2626; }
+    .timer-ring.upload-phase .progress { stroke: #4a9eca; }
+
+    .timer-display {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Upload area */
+    .upload-area {
+      border: 2px dashed #b5dbc7;
+      border-radius: 1rem;
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .upload-area:hover, .upload-area.dragover {
+      border-color: #368763;
+      background: #f0f7f4;
+    }
+    .upload-area.disabled {
+      opacity: 0.5;
+      pointer-events: none;
+      cursor: not-allowed;
+    }
+
+    .preview-img {
+      width: 80px; height: 80px; object-fit: cover; border-radius: 8px;
+      border: 2px solid #e8ecf0;
+    }
+
+    /* Pulse for urgency */
+    @keyframes pulse-soft {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    .pulse-label { animation: pulse-soft 1.5s ease infinite; }
+
+    /* Phase transitions */
+    .phase-enter { animation: phaseIn 0.5s ease; }
+    @keyframes phaseIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body class="bg-surface-50 antialiased min-h-screen">
+
+  <!-- Navigation -->
+  <nav class="sticky top-0 z-50 nav-blur bg-white/80 border-b border-surface-200/60">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <a href="/dashboard.html" class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-brand-500 flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+            </svg>
+          </div>
+          <span class="font-display text-xl text-brand-800 tracking-tight">EvalPrep</span>
+        </a>
+        <a href="/dashboard.html" class="px-4 py-2 text-sm font-medium text-gray-600 rounded-lg hover:text-brand-600 hover:bg-brand-50 transition-colors duration-200 focus-visible:outline-none flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"/></svg>
+          Înapoi la Dashboard
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+
+    <!-- ═══════ PHASE: START ═══════ -->
+    <div id="phaseStart" class="text-center py-12">
+      <div class="card-floating rounded-2xl bg-white border border-surface-200/60 p-8 lg:p-12 max-w-lg mx-auto">
+        <div class="w-16 h-16 rounded-2xl bg-brand-50 flex items-center justify-center mx-auto mb-6">
+          <svg class="w-8 h-8 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/>
+          </svg>
+        </div>
+        <h1 id="simTitle" class="font-display text-2xl text-brand-950 mb-2"></h1>
+        <p id="simSubject" class="text-brand-600 font-semibold text-sm mb-2"></p>
+        <p id="simDesc" class="text-gray-500 text-sm mb-8"></p>
+
+        <div class="bg-surface-50 rounded-xl p-4 mb-8 text-left space-y-2">
+          <div class="flex items-center gap-2 text-sm text-gray-600">
+            <svg class="w-4 h-4 text-brand-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Durata: <strong>2 ore</strong>
+          </div>
+          <div class="flex items-center gap-2 text-sm text-gray-600">
+            <svg class="w-4 h-4 text-accent-warm shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+            Încărcare lucrare: <strong>5 minute</strong> după expirare
+          </div>
+          <div class="flex items-center gap-2 text-sm text-gray-600">
+            <svg class="w-4 h-4 text-accent-sky shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25a2.25 2.25 0 00-2.25-2.25H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z"/></svg>
+            Poze cu lucrarea: maxim <strong>10 imagini</strong>
+          </div>
+        </div>
+
+        <button id="startBtn" onclick="startSimulation()"
+          class="btn-primary w-full py-4 text-base font-semibold text-white bg-brand-500 rounded-xl hover:bg-brand-600 active:bg-brand-700 transition-colors duration-200 focus-visible:outline-none disabled:opacity-60">
+          Începe simularea
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══════ PHASE: EXAM (Timer + PDF) ═══════ -->
+    <div id="phaseExam" class="hidden phase-enter">
+      <!-- Timer Bar -->
+      <div class="card-floating rounded-2xl bg-white border border-surface-200/60 p-6 mb-6">
+        <div class="flex flex-col sm:flex-row items-center gap-6">
+          <div class="timer-ring" id="timerRing">
+            <svg viewBox="0 0 180 180">
+              <circle class="track" cx="90" cy="90" r="84" stroke-dasharray="527.79" stroke-dashoffset="0"/>
+              <circle class="progress" id="timerCircle" cx="90" cy="90" r="84" stroke-dasharray="527.79" stroke-dashoffset="0"/>
+            </svg>
+            <div class="text-center">
+              <div id="timerDisplay" class="timer-display text-brand-950">02:00:00</div>
+              <div id="timerLabel" class="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-1">Timp rămas</div>
+            </div>
+          </div>
+          <div class="flex-1 text-center sm:text-left">
+            <h2 id="examTitle" class="font-display text-xl text-brand-950 mb-1"></h2>
+            <p id="examSubject" class="text-sm text-gray-500 mb-4"></p>
+            <a id="pdfLink" href="#" target="_blank" rel="noopener"
+              class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-brand-500 rounded-xl hover:bg-brand-600 transition-colors focus-visible:outline-none">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m.75 12l3 3m0 0l3-3m-3 3v-6m-1.5-9H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"/></svg>
+              Deschide subiectul (PDF)
+            </a>
+            <p class="text-xs text-gray-400 mt-3">Rezolvă subiectul pe hârtie. La finalul timpului vei încărca poze cu lucrarea ta.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- PDF Embed -->
+      <div class="card-elevated rounded-2xl bg-white border border-surface-200/60 overflow-hidden" style="height: 70vh;">
+        <iframe id="pdfEmbed" class="w-full h-full" style="border: none;"></iframe>
+      </div>
+    </div>
+
+    <!-- ═══════ PHASE: UPLOAD ═══════ -->
+    <div id="phaseUpload" class="hidden phase-enter">
+      <div class="card-floating rounded-2xl bg-white border border-surface-200/60 p-6 mb-6">
+        <div class="flex flex-col sm:flex-row items-center gap-6">
+          <div class="timer-ring upload-phase" id="uploadTimerRing">
+            <svg viewBox="0 0 180 180">
+              <circle class="track" cx="90" cy="90" r="84" stroke-dasharray="527.79" stroke-dashoffset="0"/>
+              <circle class="progress" id="uploadTimerCircle" cx="90" cy="90" r="84" stroke-dasharray="527.79" stroke-dashoffset="0"/>
+            </svg>
+            <div class="text-center">
+              <div id="uploadTimerDisplay" class="timer-display text-accent-sky">05:00</div>
+              <div class="text-xs font-semibold text-accent-sky uppercase tracking-wider mt-1 pulse-label">Încarcă acum!</div>
+            </div>
+          </div>
+          <div class="flex-1 text-center sm:text-left">
+            <h2 class="font-display text-xl text-brand-950 mb-1">Timpul a expirat!</h2>
+            <p class="text-gray-500 text-sm">Ai <strong>5 minute</strong> pentru a încărca poze cu lucrarea ta. Fotografiază fiecare pagină clar și complet.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload area -->
+      <div class="card-elevated rounded-2xl bg-white border border-surface-200/60 p-6">
+        <div id="uploadArea" class="upload-area" onclick="document.getElementById('fileInput').click()">
+          <input type="file" id="fileInput" accept="image/*" multiple class="hidden" onchange="handleFiles(this.files)">
+          <svg class="w-10 h-10 mx-auto mb-3 text-brand-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/>
+          </svg>
+          <p class="text-sm font-semibold text-gray-700 mb-1">Apasă sau trage imagini aici</p>
+          <p class="text-xs text-gray-400">JPG, PNG — maxim 10 imagini, 20MB fiecare</p>
+        </div>
+
+        <!-- Preview -->
+        <div id="previewContainer" class="hidden mt-4 pt-4 border-t border-surface-200">
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-sm font-semibold text-gray-700"><span id="fileCount">0</span> imagini selectate</p>
+            <button onclick="clearFiles()" class="text-xs font-semibold text-red-500 hover:text-red-700 transition-colors focus-visible:outline-none">Șterge toate</button>
+          </div>
+          <div id="previews" class="flex flex-wrap gap-2"></div>
+        </div>
+
+        <!-- Submit -->
+        <div id="submitError" class="hidden mt-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm"></div>
+
+        <button id="submitBtn" onclick="submitWork()" disabled
+          class="btn-primary w-full mt-6 py-4 text-base font-semibold text-white bg-brand-500 rounded-xl hover:bg-brand-600 active:bg-brand-700 transition-colors duration-200 focus-visible:outline-none disabled:opacity-60 disabled:cursor-not-allowed">
+          Trimite lucrarea
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══════ PHASE: DONE ═══════ -->
+    <div id="phaseDone" class="hidden phase-enter text-center py-16">
+      <div class="card-floating rounded-2xl bg-white border border-surface-200/60 p-8 lg:p-12 max-w-lg mx-auto">
+        <div class="w-16 h-16 rounded-full bg-brand-100 flex items-center justify-center mx-auto mb-6">
+          <svg class="w-8 h-8 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <h2 class="font-display text-2xl text-brand-950 mb-2">Lucrare trimisă cu succes!</h2>
+        <p class="text-gray-500 mb-8">Lucrarea ta a fost trimisă pentru corectare. Vei primi rezultatul de la profesor.</p>
+        <a href="/dashboard.html" class="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-brand-500 rounded-xl hover:bg-brand-600 transition-colors focus-visible:outline-none">
+          Înapoi la Dashboard
+        </a>
+      </div>
+    </div>
+
+    <!-- ═══════ PHASE: EXPIRED ═══════ -->
+    <div id="phaseExpired" class="hidden phase-enter text-center py-16">
+      <div class="card-floating rounded-2xl bg-white border border-surface-200/60 p-8 lg:p-12 max-w-lg mx-auto">
+        <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-6">
+          <svg class="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+          </svg>
+        </div>
+        <h2 class="font-display text-2xl text-brand-950 mb-2">Timpul a expirat</h2>
+        <p class="text-gray-500 mb-8">Fereastra de încărcare s-a închis. Contactează profesorul dacă ai nevoie de asistență.</p>
+        <a href="/dashboard.html" class="inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold text-white bg-brand-500 rounded-xl hover:bg-brand-600 transition-colors focus-visible:outline-none">
+          Înapoi la Dashboard
+        </a>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const simId = params.get('id');
+    if (!simId) window.location.href = '/dashboard.html';
+
+    let timerInterval = null;
+    let uploadTimerInterval = null;
+    let selectedFiles = [];
+    let sessionData = null;
+
+    const CIRCUMFERENCE = 2 * Math.PI * 84; // ~527.79
+
+    // ── Show/hide phases ──
+    function showPhase(phase) {
+      ['phaseStart', 'phaseExam', 'phaseUpload', 'phaseDone', 'phaseExpired'].forEach(id => {
+        document.getElementById(id).classList.add('hidden');
+      });
+      document.getElementById(phase).classList.remove('hidden');
+    }
+
+    // ── Format time ──
+    function formatTime(ms) {
+      if (ms <= 0) return '00:00';
+      const totalSec = Math.ceil(ms / 1000);
+      const h = Math.floor(totalSec / 3600);
+      const m = Math.floor((totalSec % 3600) / 60);
+      const s = totalSec % 60;
+      if (h > 0) return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+
+    // ── Start exam timer ──
+    function startExamTimer(endsAt) {
+      const totalDuration = 2 * 60 * 60 * 1000; // 2 hours
+      const circle = document.getElementById('timerCircle');
+      const display = document.getElementById('timerDisplay');
+      const ring = document.getElementById('timerRing');
+
+      if (timerInterval) clearInterval(timerInterval);
+
+      timerInterval = setInterval(() => {
+        const now = Date.now();
+        const remaining = new Date(endsAt).getTime() - now;
+
+        if (remaining <= 0) {
+          clearInterval(timerInterval);
+          display.textContent = '00:00:00';
+          circle.style.strokeDashoffset = CIRCUMFERENCE;
+          // Transition to upload phase
+          transitionToUpload();
+          return;
+        }
+
+        const elapsed = totalDuration - remaining;
+        const progress = elapsed / totalDuration;
+        circle.style.strokeDashoffset = CIRCUMFERENCE * (1 - progress);
+        display.textContent = formatTime(remaining);
+
+        // Color transitions
+        if (remaining < 5 * 60 * 1000) {
+          ring.className = 'timer-ring danger';
+        } else if (remaining < 15 * 60 * 1000) {
+          ring.className = 'timer-ring warning';
+        }
+      }, 1000);
+    }
+
+    // ── Start upload timer ──
+    function startUploadTimer(endsAt) {
+      const totalDuration = 5 * 60 * 1000;
+      const circle = document.getElementById('uploadTimerCircle');
+      const display = document.getElementById('uploadTimerDisplay');
+      const ring = document.getElementById('uploadTimerRing');
+
+      if (uploadTimerInterval) clearInterval(uploadTimerInterval);
+
+      uploadTimerInterval = setInterval(() => {
+        const now = Date.now();
+        const remaining = new Date(endsAt).getTime() - now;
+
+        if (remaining <= 0) {
+          clearInterval(uploadTimerInterval);
+          display.textContent = '00:00';
+          circle.style.strokeDashoffset = CIRCUMFERENCE;
+          // Time's up
+          showPhase('phaseExpired');
+          return;
+        }
+
+        const elapsed = totalDuration - remaining;
+        const progress = elapsed / totalDuration;
+        circle.style.strokeDashoffset = CIRCUMFERENCE * (1 - progress);
+        display.textContent = formatTime(remaining);
+
+        if (remaining < 60 * 1000) {
+          ring.classList.add('danger');
+          ring.classList.remove('upload-phase');
+        }
+      }, 1000);
+    }
+
+    // ── Transition to upload ──
+    function transitionToUpload() {
+      showPhase('phaseUpload');
+      if (sessionData) {
+        startUploadTimer(sessionData.upload_ends_at);
+      }
+    }
+
+    // ── File handling ──
+    function handleFiles(fileList) {
+      const newFiles = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+      if (selectedFiles.length + newFiles.length > 10) {
+        alert('Poți încărca maxim 10 imagini.');
+        return;
+      }
+      selectedFiles = [...selectedFiles, ...newFiles];
+      renderPreviews();
+    }
+
+    function clearFiles() {
+      selectedFiles = [];
+      renderPreviews();
+      document.getElementById('fileInput').value = '';
+    }
+
+    function removeFile(idx) {
+      selectedFiles.splice(idx, 1);
+      renderPreviews();
+    }
+
+    function renderPreviews() {
+      const container = document.getElementById('previewContainer');
+      const previews = document.getElementById('previews');
+      const count = document.getElementById('fileCount');
+      const submitBtn = document.getElementById('submitBtn');
+
+      if (selectedFiles.length === 0) {
+        container.classList.add('hidden');
+        submitBtn.disabled = true;
+        return;
+      }
+
+      container.classList.remove('hidden');
+      count.textContent = selectedFiles.length;
+      submitBtn.disabled = false;
+
+      previews.innerHTML = '';
+      selectedFiles.forEach((file, idx) => {
+        const url = URL.createObjectURL(file);
+        previews.innerHTML += `
+          <div class="relative group">
+            <img src="${url}" alt="${file.name}" class="preview-img">
+            <button onclick="removeFile(${idx})" class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity focus-visible:outline-none">&times;</button>
+          </div>
+        `;
+      });
+    }
+
+    // Drag & drop
+    const uploadArea = document.getElementById('uploadArea');
+    uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); uploadArea.classList.add('dragover'); });
+    uploadArea.addEventListener('dragleave', () => { uploadArea.classList.remove('dragover'); });
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      handleFiles(e.dataTransfer.files);
+    });
+
+    // ── Submit work ──
+    async function submitWork() {
+      const btn = document.getElementById('submitBtn');
+      const errEl = document.getElementById('submitError');
+      errEl.classList.add('hidden');
+      btn.disabled = true;
+      btn.textContent = 'Se trimite...';
+
+      try {
+        const formData = new FormData();
+        selectedFiles.forEach(f => formData.append('images', f));
+
+        const res = await fetch(`/api/simulations/${simId}/submit`, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        clearInterval(uploadTimerInterval);
+        showPhase('phaseDone');
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.remove('hidden');
+        btn.disabled = false;
+        btn.textContent = 'Trimite lucrarea';
+      }
+    }
+
+    // ── Start simulation ──
+    async function startSimulation() {
+      const btn = document.getElementById('startBtn');
+      btn.disabled = true;
+      btn.textContent = 'Se pornește...';
+
+      try {
+        const res = await fetch(`/api/simulations/${simId}/start`, { method: 'POST' });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        sessionData = data.session;
+        enterExamPhase();
+      } catch (err) {
+        alert('Eroare: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = 'Începe simularea';
+      }
+    }
+
+    function enterExamPhase() {
+      document.getElementById('examTitle').textContent = document.getElementById('simTitle').textContent;
+      document.getElementById('examSubject').textContent = document.getElementById('simSubject').textContent;
+      document.getElementById('pdfLink').href = `/api/simulations/${simId}/pdf`;
+      document.getElementById('pdfEmbed').src = `/api/simulations/${simId}/pdf`;
+      showPhase('phaseExam');
+      startExamTimer(sessionData.timer_ends_at);
+    }
+
+    // ── Init: load simulation info and check status ──
+    (async () => {
+      try {
+        const authRes = await fetch('/api/auth/me');
+        if (!authRes.ok) { window.location.href = '/'; return; }
+
+        // Load simulation list to get details
+        const simsRes = await fetch('/api/simulations');
+        const simsData = await simsRes.json();
+        const sim = simsData.simulations.find(s => s.id === parseInt(simId));
+
+        if (!sim) { window.location.href = '/dashboard.html'; return; }
+
+        // Fill start phase info
+        document.getElementById('simTitle').textContent = sim.title;
+        document.getElementById('simSubject').textContent = sim.subject;
+        document.getElementById('simDesc').textContent = sim.description || 'Simulare oficială pentru Evaluarea Națională.';
+
+        // Check existing session
+        if (sim.session) {
+          sessionData = sim.session;
+          const now = Date.now();
+          const timerEnd = new Date(sim.session.timer_ends_at).getTime();
+          const uploadEnd = new Date(sim.session.upload_ends_at).getTime();
+
+          if (sim.session.status === 'completed') {
+            showPhase('phaseDone');
+          } else if (sim.session.status === 'expired') {
+            showPhase('phaseExpired');
+          } else if (now >= uploadEnd) {
+            showPhase('phaseExpired');
+          } else if (now >= timerEnd) {
+            // In upload window
+            showPhase('phaseUpload');
+            startUploadTimer(sim.session.upload_ends_at);
+          } else {
+            // Still in exam
+            enterExamPhase();
+          }
+        }
+        // else: show start phase (default)
+
+      } catch (err) {
+        console.error(err);
+        window.location.href = '/';
+      }
+    })();
+  </script>
+</body>
+</html>

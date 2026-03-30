@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conectare — EvalPrep</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50:'#f0f7f4',100:'#d9ede2',200:'#b5dbc7',300:'#85c2a4',400:'#56a57e',500:'#368763',600:'#276c4f',700:'#205741',800:'#1c4635',900:'#183a2d',950:'#0c2019' },
+            surface: { 50:'#fafbfc',100:'#f3f5f7',200:'#e8ecf0',300:'#d5dbe3',400:'#a8b3c0' },
+            accent: { warm:'#e8985e',warmLight:'#fdf3eb',sky:'#4a9eca',skyLight:'#edf6fb' }
+          },
+          fontFamily: { display:['"DM Serif Display"','serif'], body:['"Inter"','sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    h1,h2,h3,.font-display { font-family: 'DM Serif Display', serif; }
+    html { scroll-behavior: smooth; }
+    .card-floating { box-shadow: 0 2px 4px rgba(54,135,99,0.05), 0 8px 24px rgba(54,135,99,0.08), 0 24px 48px rgba(54,135,99,0.06); }
+    .spring-hover { transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease; }
+    .btn-primary:focus-visible { outline:none; box-shadow:0 0 0 3px rgba(54,135,99,0.3),0 0 0 1px rgba(54,135,99,0.8); }
+    .hero-gradient {
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 40%, rgba(54,135,99,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 50% at 80% 30%, rgba(74,158,202,0.08) 0%, transparent 70%),
+        linear-gradient(180deg, #fafbfc 0%, #f0f7f4 100%);
+    }
+    .grain::before {
+      content:'';position:absolute;inset:0;opacity:0.03;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      pointer-events:none;z-index:1;
+    }
+    .shake { animation: shake 0.5s ease; }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%,60% { transform: translateX(-6px); }
+      40%,80% { transform: translateX(6px); }
+    }
+  </style>
+</head>
+<body class="bg-surface-50 antialiased min-h-screen flex flex-col">
+
+  <!-- Minimal nav -->
+  <nav class="py-4 px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+      <a href="/" class="inline-flex items-center gap-2.5 group">
+        <div class="w-9 h-9 rounded-xl bg-brand-500 flex items-center justify-center">
+          <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+          </svg>
+        </div>
+        <span class="font-display text-xl text-brand-800 tracking-tight">EvalPrep</span>
+      </a>
+    </div>
+  </nav>
+
+  <!-- Main -->
+  <main class="flex-1 flex items-center justify-center relative hero-gradient grain px-4 py-12">
+    <div class="relative z-10 w-full max-w-md">
+
+      <!-- Tab Switcher -->
+      <div class="flex bg-surface-100 rounded-2xl p-1 mb-8">
+        <button id="tabLogin" onclick="showTab('login')" class="flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-300 text-brand-700 bg-white shadow-sm">
+          Conectare
+        </button>
+        <button id="tabRegister" onclick="showTab('register')" class="flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-300 text-gray-500 hover:text-gray-700">
+          Înregistrare
+        </button>
+      </div>
+
+      <!-- Login Form -->
+      <div id="loginForm" class="card-floating rounded-2xl bg-white border border-surface-200/60 p-8">
+        <div class="text-center mb-8">
+          <h1 class="font-display text-2xl text-brand-950 mb-2">Bine ai revenit!</h1>
+          <p class="text-gray-500 text-sm">Conectează-te pentru a continua pregătirea.</p>
+        </div>
+
+        <div id="loginError" class="hidden mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm"></div>
+
+        <form onsubmit="handleLogin(event)" class="space-y-5">
+          <div>
+            <label for="loginEmail" class="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+            <input type="email" id="loginEmail" required placeholder="elev@email.com"
+              class="w-full px-4 py-3 rounded-xl border border-surface-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all duration-200 placeholder:text-gray-400">
+          </div>
+          <div>
+            <label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-1.5">Parolă</label>
+            <input type="password" id="loginPassword" required placeholder="••••••••"
+              class="w-full px-4 py-3 rounded-xl border border-surface-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all duration-200 placeholder:text-gray-400">
+          </div>
+          <button type="submit" id="loginBtn"
+            class="btn-primary w-full py-3.5 text-sm font-semibold text-white bg-brand-500 rounded-xl hover:bg-brand-600 active:bg-brand-700 transition-colors duration-200 focus-visible:outline-none disabled:opacity-60 disabled:cursor-not-allowed">
+            Conectare
+          </button>
+        </form>
+
+        <p class="text-center text-sm text-gray-500 mt-6">
+          Nu ai cont? <button onclick="showTab('register')" class="text-brand-600 font-semibold hover:text-brand-700 focus-visible:outline-none focus-visible:underline">Înregistrează-te</button>
+        </p>
+      </div>
+
+      <!-- Register Form -->
+      <div id="registerForm" class="card-floating rounded-2xl bg-white border border-surface-200/60 p-8 hidden">
+        <div class="text-center mb-8">
+          <h1 class="font-display text-2xl text-brand-950 mb-2">Creează un cont</h1>
+          <p class="text-gray-500 text-sm">Începe pregătirea pentru Evaluarea Națională.</p>
+        </div>
+
+        <div id="registerError" class="hidden mb-4 p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm"></div>
+
+        <form onsubmit="handleRegister(event)" class="space-y-5">
+          <div>
+            <label for="regName" class="block text-sm font-medium text-gray-700 mb-1.5">Numele complet</label>
+            <input type="text" id="regName" required placeholder="Maria Popescu"
+              class="w-full px-4 py-3 rounded-xl border border-surface-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all duration-200 placeholder:text-gray-400">
+          </div>
+          <div>
+            <label for="regEmail" class="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+            <input type="email" id="regEmail" required placeholder="maria@email.com"
+              class="w-full px-4 py-3 rounded-xl border border-surface-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all duration-200 placeholder:text-gray-400">
+          </div>
+          <div>
+            <label for="regPassword" class="block text-sm font-medium text-gray-700 mb-1.5">Parolă</label>
+            <input type="password" id="regPassword" required minlength="6" placeholder="Minim 6 caractere"
+              class="w-full px-4 py-3 rounded-xl border border-surface-300 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 transition-all duration-200 placeholder:text-gray-400">
+          </div>
+          <button type="submit" id="registerBtn"
+            class="btn-primary w-full py-3.5 text-sm font-semibold text-white bg-brand-500 rounded-xl hover:bg-brand-600 active:bg-brand-700 transition-colors duration-200 focus-visible:outline-none disabled:opacity-60 disabled:cursor-not-allowed">
+            Creează contul
+          </button>
+        </form>
+
+        <p class="text-center text-sm text-gray-500 mt-6">
+          Ai deja cont? <button onclick="showTab('login')" class="text-brand-600 font-semibold hover:text-brand-700 focus-visible:outline-none focus-visible:underline">Conectează-te</button>
+        </p>
+      </div>
+
+    </div>
+  </main>
+
+  <script>
+    // Tab switching
+    function showTab(tab) {
+      const loginForm = document.getElementById('loginForm');
+      const registerForm = document.getElementById('registerForm');
+      const tabLogin = document.getElementById('tabLogin');
+      const tabRegister = document.getElementById('tabRegister');
+
+      if (tab === 'login') {
+        loginForm.classList.remove('hidden');
+        registerForm.classList.add('hidden');
+        tabLogin.className = 'flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-300 text-brand-700 bg-white shadow-sm';
+        tabRegister.className = 'flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-300 text-gray-500 hover:text-gray-700';
+      } else {
+        loginForm.classList.add('hidden');
+        registerForm.classList.remove('hidden');
+        tabRegister.className = 'flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-300 text-brand-700 bg-white shadow-sm';
+        tabLogin.className = 'flex-1 py-3 text-sm font-semibold rounded-xl transition-all duration-300 text-gray-500 hover:text-gray-700';
+      }
+    }
+
+    // Check hash for direct register link
+    if (window.location.hash === '#register') showTab('register');
+
+    // Login
+    async function handleLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('loginBtn');
+      const errEl = document.getElementById('loginError');
+      errEl.classList.add('hidden');
+      btn.disabled = true;
+      btn.textContent = 'Se conectează...';
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: document.getElementById('loginEmail').value,
+            password: document.getElementById('loginPassword').value
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        window.location.href = data.user.role === 'admin' ? '/admin.html' : '/dashboard.html';
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.remove('hidden');
+        errEl.parentElement.classList.add('shake');
+        setTimeout(() => errEl.parentElement.classList.remove('shake'), 500);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Conectare';
+      }
+    }
+
+    // Register
+    async function handleRegister(e) {
+      e.preventDefault();
+      const btn = document.getElementById('registerBtn');
+      const errEl = document.getElementById('registerError');
+      errEl.classList.add('hidden');
+      btn.disabled = true;
+      btn.textContent = 'Se creează contul...';
+
+      try {
+        const res = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: document.getElementById('regName').value,
+            email: document.getElementById('regEmail').value,
+            password: document.getElementById('regPassword').value
+          })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        window.location.href = '/dashboard.html';
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.classList.remove('hidden');
+        errEl.parentElement.classList.add('shake');
+        setTimeout(() => errEl.parentElement.classList.remove('shake'), 500);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Creează contul';
+      }
+    }
+
+    // Redirect if already logged in
+    (async () => {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          window.location.href = data.user.role === 'admin' ? '/admin.html' : '/dashboard.html';
+        }
+      } catch (e) {}
+    })();
+  </script>
+</body>
+</html>

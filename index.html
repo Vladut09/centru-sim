@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EvalPrep — Centru de Pregătire pentru Evaluarea Națională</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f7f4',
+              100: '#d9ede2',
+              200: '#b5dbc7',
+              300: '#85c2a4',
+              400: '#56a57e',
+              500: '#368763',
+              600: '#276c4f',
+              700: '#205741',
+              800: '#1c4635',
+              900: '#183a2d',
+              950: '#0c2019',
+            },
+            surface: {
+              50: '#fafbfc',
+              100: '#f3f5f7',
+              200: '#e8ecf0',
+              300: '#d5dbe3',
+              400: '#a8b3c0',
+            },
+            accent: {
+              warm: '#e8985e',
+              warmLight: '#fdf3eb',
+              sky: '#4a9eca',
+              skyLight: '#edf6fb',
+            }
+          },
+          fontFamily: {
+            display: ['"DM Serif Display"', 'serif'],
+            body: ['"Inter"', 'sans-serif'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    h1, h2, h3, .font-display { font-family: 'DM Serif Display', serif; }
+
+    /* Grain texture overlay */
+    .grain::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      opacity: 0.03;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Custom scrollbar */
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: #f3f5f7; }
+    ::-webkit-scrollbar-thumb { background: #b5dbc7; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #85c2a4; }
+
+    /* Smooth scroll */
+    html { scroll-behavior: smooth; overflow-x: hidden; }
+    body { overflow-x: hidden; }
+
+    /* Minimum tap target for mobile */
+    @media (pointer: coarse) {
+      a, button { min-height: 44px; }
+    }
+
+    /* Spring-style easing */
+    .spring-hover {
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+    }
+    .spring-hover:hover {
+      transform: translateY(-4px);
+    }
+    .spring-hover:active {
+      transform: translateY(-1px);
+    }
+
+    /* Card shadow system */
+    .card-elevated {
+      box-shadow:
+        0 1px 2px rgba(54, 135, 99, 0.04),
+        0 4px 12px rgba(54, 135, 99, 0.06),
+        0 12px 32px rgba(54, 135, 99, 0.04);
+      border-color: rgb(213 219 227 / 0.85);
+    }
+    .card-floating {
+      box-shadow:
+        0 2px 4px rgba(54, 135, 99, 0.05),
+        0 8px 24px rgba(54, 135, 99, 0.08),
+        0 24px 48px rgba(54, 135, 99, 0.06);
+      border-color: rgb(213 219 227 / 0.85);
+    }
+
+    /* Progress bar animation */
+    @keyframes progressFill {
+      from { width: 0; }
+    }
+    .progress-animate {
+      animation: progressFill 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+
+    /* Fade in on scroll */
+    .fade-in-up {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .fade-in-up.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Hero gradient */
+    .hero-gradient {
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 40%, rgba(54, 135, 99, 0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 50% at 80% 30%, rgba(74, 158, 202, 0.08) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 50% 80%, rgba(232, 152, 94, 0.06) 0%, transparent 70%),
+        linear-gradient(180deg, #fafbfc 0%, #f0f7f4 100%);
+    }
+
+    /* Nav blur */
+    .nav-blur {
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    /* Stat counter */
+    .stat-glow {
+      box-shadow: 0 0 0 1px rgba(54, 135, 99, 0.08), 0 2px 8px rgba(54, 135, 99, 0.06);
+    }
+
+    /* Button focus ring */
+    .btn-primary:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(54, 135, 99, 0.3), 0 0 0 1px rgba(54, 135, 99, 0.8);
+    }
+    .btn-secondary:focus-visible {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(54, 135, 99, 0.2), 0 0 0 1px rgba(54, 135, 99, 0.4);
+    }
+
+    /* Mobile menu */
+    .mobile-menu {
+      transform: translateX(100%);
+      transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .mobile-menu.open {
+      transform: translateX(0);
+    }
+
+    /* Tab active indicator */
+    .tab-active {
+      position: relative;
+    }
+    .tab-active::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: #368763;
+      border-radius: 1px;
+    }
+
+    /* Dark mode */
+    html.dark body { background-color: #0f1a14; color: #c8ddd2; }
+    html.dark nav { background-color: rgba(12, 32, 25, 0.88) !important; border-color: rgba(255,255,255,0.07) !important; }
+    html.dark .hero-gradient {
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 40%, rgba(54, 135, 99, 0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 60% 50% at 80% 30%, rgba(74, 158, 202, 0.1) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 50% 80%, rgba(232, 152, 94, 0.08) 0%, transparent 70%),
+        linear-gradient(180deg, #0f1a14 0%, #0c1f17 100%) !important;
+    }
+    html.dark section.bg-white { background-color: #142219 !important; }
+    html.dark section.bg-surface-50 { background-color: #0c1f17 !important; }
+    html.dark div.bg-white:not(.text-white) { background-color: #1a2e22 !important; }
+    html.dark .stat-glow { background-color: rgba(26, 46, 34, 0.9) !important; box-shadow: 0 0 0 1px rgba(54,135,99,0.2); }
+    html.dark .mobile-menu { background-color: #1a2e22 !important; }
+    html.dark .text-gray-800 { color: #d9ede2 !important; }
+    html.dark .text-gray-700 { color: #c8ddd2 !important; }
+    html.dark .text-gray-600 { color: #a8c4b2 !important; }
+    html.dark .text-gray-500 { color: #8aad9a !important; }
+    html.dark .text-gray-400 { color: #6b9279 !important; }
+    html.dark .text-brand-950 { color: #f0f7f4 !important; }
+    html.dark .text-brand-900 { color: #e0ede6 !important; }
+    html.dark h1, html.dark h2, html.dark h3 { color: #d9ede2; }
+    html.dark .card-elevated { background-color: #1a2e22 !important; border-color: rgba(255,255,255,0.07) !important; box-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2), 0 12px 32px rgba(0,0,0,0.15); }
+    html.dark .card-floating { background-color: #1a2e22 !important; border-color: rgba(255,255,255,0.07) !important; }
+    html.dark .bg-brand-50 { background-color: rgba(54,135,99,0.15) !important; }
+    html.dark .bg-accent-warmLight { background-color: rgba(232,152,94,0.15) !important; }
+    html.dark .bg-accent-skyLight { background-color: rgba(74,158,202,0.15) !important; }
+    html.dark .bg-purple-50 { background-color: rgba(168,85,247,0.12) !important; }
+    html.dark .bg-rose-50 { background-color: rgba(244,63,94,0.12) !important; }
+    html.dark .bg-emerald-50 { background-color: rgba(52,211,153,0.12) !important; }
+    html.dark .border-brand-200 { border-color: rgba(54,135,99,0.4) !important; }
+    html.dark .border-surface-200\/60 { border-color: rgba(255,255,255,0.07) !important; }
+    html.dark .bg-brand-100\/60 { background-color: rgba(54,135,99,0.2) !important; }
+    html.dark .border-brand-200\/40 { border-color: rgba(54,135,99,0.3) !important; }
+    html.dark .btn-secondary { color: #85c2a4 !important; border-color: rgba(54,135,99,0.4) !important; }
+    html.dark .btn-secondary:hover { background-color: rgba(54,135,99,0.12) !important; }
+    html.dark .hover\:bg-brand-50:hover { background-color: rgba(54,135,99,0.12) !important; }
+    html.dark .hover\:bg-surface-100:hover { background-color: rgba(255,255,255,0.06) !important; }
+    html.dark ::-webkit-scrollbar-track { background: #0f1a14; }
+    html.dark ::-webkit-scrollbar-thumb { background: #276c4f; }
+    html.dark .text-brand-700 { color: #85c2a4 !important; }
+    html.dark .text-orange-700 { color: #e8985e !important; }
+    html.dark .bg-accent-warmLight.text-orange-700 span { color: #e8985e !important; }
+  </style>
+</head>
+<body class="bg-surface-50 text-gray-800 antialiased">
+
+  <!-- Navigation -->
+  <nav class="fixed top-0 left-0 right-0 z-50 nav-blur bg-white/80 border-b border-surface-200/60">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16 lg:h-18">
+        <!-- Logo -->
+        <a href="#" class="flex items-center gap-2.5 group">
+          <div class="w-9 h-9 rounded-xl bg-brand-500 flex items-center justify-center spring-hover">
+            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+            </svg>
+          </div>
+          <span class="font-display text-xl text-brand-800 tracking-tight">EvalPrep</span>
+        </a>
+
+        <!-- Desktop Nav -->
+        <div class="hidden lg:flex items-center gap-1">
+          <a href="#features" class="px-4 py-2 text-sm font-medium text-gray-600 rounded-lg hover:text-brand-600 hover:bg-brand-50 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40">Funcționalități</a>
+          <a href="#how-it-works" class="px-4 py-2 text-sm font-medium text-gray-600 rounded-lg hover:text-brand-600 hover:bg-brand-50 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40">Cum funcționează</a>
+          <a href="#subjects" class="px-4 py-2 text-sm font-medium text-gray-600 rounded-lg hover:text-brand-600 hover:bg-brand-50 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40">Materii</a>
+          <a href="#dashboard-preview" class="px-4 py-2 text-sm font-medium text-gray-600 rounded-lg hover:text-brand-600 hover:bg-brand-50 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40">Dashboard</a>
+          <a href="#testimonials" class="px-4 py-2 text-sm font-medium text-gray-600 rounded-lg hover:text-brand-600 hover:bg-brand-50 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40">Testimoniale</a>
+          <a href="#pricing" class="px-4 py-2 text-sm font-medium text-gray-600 rounded-lg hover:text-brand-600 hover:bg-brand-50 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40">Prețuri</a>
+        </div>
+
+        <!-- CTA Buttons -->
+        <div class="hidden lg:flex items-center gap-3">
+          <button onclick="toggleDarkMode()" id="darkToggle" class="p-2 rounded-lg text-gray-500 hover:bg-surface-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 transition-colors duration-200" aria-label="Comută modul întunecat">
+            <svg id="sunIcon" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0z" />
+            </svg>
+            <svg id="moonIcon" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998z" />
+            </svg>
+          </button>
+          <a href="/login.html" class="btn-secondary px-4 py-2 text-sm font-semibold text-brand-700 rounded-xl hover:bg-brand-50 active:bg-brand-100 transition-colors duration-200 focus-visible:outline-none">
+            Conectare
+          </a>
+          <a href="/login.html#register" class="btn-primary px-5 py-2.5 text-sm font-semibold text-white bg-brand-500 rounded-xl hover:bg-brand-600 active:bg-brand-700 transition-colors duration-200 focus-visible:outline-none">
+            Începe gratuit
+          </a>
+        </div>
+
+        <!-- Mobile menu button -->
+        <div class="lg:hidden flex items-center gap-1">
+          <button onclick="toggleDarkMode()" class="p-2 rounded-lg text-gray-500 hover:bg-surface-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40 transition-colors duration-200" aria-label="Comută modul întunecat">
+            <svg id="sunIconMobile" class="w-5 h-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0z" />
+            </svg>
+            <svg id="moonIconMobile" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998z" />
+            </svg>
+          </button>
+          <button onclick="toggleMobileMenu()" class="p-2 rounded-lg text-gray-600 hover:bg-surface-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40" aria-label="Meniu">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+        </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile menu -->
+    <div id="mobileMenu" class="mobile-menu fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white shadow-2xl z-50 p-6 lg:hidden">
+      <div class="flex justify-end mb-8">
+        <button onclick="toggleMobileMenu()" class="p-2 rounded-lg text-gray-600 hover:bg-surface-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40" aria-label="Închide meniu">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="flex flex-col gap-2">
+        <a href="#features" onclick="toggleMobileMenu()" class="px-4 py-3 text-base font-medium text-gray-700 rounded-xl hover:bg-brand-50 hover:text-brand-600 transition-colors">Funcționalități</a>
+        <a href="#how-it-works" onclick="toggleMobileMenu()" class="px-4 py-3 text-base font-medium text-gray-700 rounded-xl hover:bg-brand-50 hover:text-brand-600 transition-colors">Cum funcționează</a>
+        <a href="#subjects" onclick="toggleMobileMenu()" class="px-4 py-3 text-base font-medium text-gray-700 rounded-xl hover:bg-brand-50 hover:text-brand-600 transition-colors">Materii</a>
+        <a href="#dashboard-preview" onclick="toggleMobileMenu()" class="px-4 py-3 text-base font-medium text-gray-700 rounded-xl hover:bg-brand-50 hover:text-brand-600 transition-colors">Dashboard</a>
+        <a href="#testimonials" onclick="toggleMobileMenu()" class="px-4 py-3 text-base font-medium text-gray-700 rounded-xl hover:bg-brand-50 hover:text-brand-600 transition-colors">Testimoniale</a>
+        <a href="#pricing" onclick="toggleMobileMenu()" class="px-4 py-3 text-base font-medium text-gray-700 rounded-xl hover:bg-brand-50 hover:text-brand-600 transition-colors">Prețuri</a>
+      </div>
+      <div class="mt-8 flex flex-col gap-3">
+        <a href="/login.html" class="block w-full px-4 py-3 text-sm font-semibold text-brand-700 border border-brand-200 rounded-xl hover:bg-brand-50 transition-colors text-center">Conectare</a>
+        <a href="/login.html#register" class="block w-full px-4 py-3 text-sm font-semibold text-white bg-brand-500 rounded-xl hover:bg-brand-600 transition-colors text-center">Începe gratuit</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="relative hero-gradient grain pt-24 pb-16 sm:pt-28 sm:pb-20 lg:pt-40 lg:pb-32 overflow-hidden">
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl mx-auto text-center">
+        <!-- Badge -->
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 rounded-full bg-brand-100/60 border border-brand-200/40 mb-6 sm:mb-8">
+          <span class="w-2 h-2 rounded-full bg-brand-500 animate-pulse"></span>
+          <span class="text-xs sm:text-sm font-medium text-brand-700">Sesiune nouă 2025–2026 disponibilă</span>
+        </div>
+
+        <h1 class="font-display text-3xl sm:text-5xl lg:text-6xl text-brand-950 leading-[1.15] sm:leading-[1.1] tracking-tight mb-5 sm:mb-6" style="letter-spacing: -0.03em;">
+          Pregătește-te pentru
+          <span class="relative inline-block">
+            <span class="relative z-10">Evaluarea Națională</span>
+            <span class="absolute bottom-0.5 sm:bottom-1 left-0 right-0 h-2 sm:h-3 bg-brand-200/50 -rotate-1 rounded"></span>
+          </span>
+          cu încredere
+        </h1>
+
+        <p class="text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto mb-8 sm:mb-10 px-2 sm:px-0" style="line-height: 1.7;">
+          Simulări realiste, corectare instantanee și statistici detaliate. Tot ce ai nevoie pentru a obține nota maximă la Evaluarea Națională, într-o singură platformă.
+        </p>
+
+        <!-- CTA Group -->
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-10 sm:mb-12 px-2 sm:px-0">
+          <a href="/login.html#register" class="btn-primary w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 text-sm sm:text-base font-semibold text-white bg-brand-500 rounded-2xl hover:bg-brand-600 active:bg-brand-700 transition-colors duration-200 spring-hover focus-visible:outline-none text-center">
+            Începe prima simulare — gratuit
+          </a>
+          <a href="#how-it-works" class="btn-secondary w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 text-sm sm:text-base font-semibold text-brand-700 bg-white border border-brand-200 rounded-2xl hover:bg-brand-50 active:bg-brand-100 transition-colors duration-200 spring-hover focus-visible:outline-none text-center">
+            Vezi cum funcționează
+          </a>
+        </div>
+
+        <!-- Social Proof -->
+        <div class="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-3 sm:gap-6 lg:gap-10">
+          <div class="stat-glow flex items-center gap-3 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-white/80">
+            <div class="flex -space-x-2">
+              <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-brand-200 border-2 border-white flex items-center justify-center text-xs font-bold text-brand-700">A</div>
+              <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-accent-warmLight border-2 border-white flex items-center justify-center text-xs font-bold text-accent-warm">M</div>
+              <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-accent-skyLight border-2 border-white flex items-center justify-center text-xs font-bold text-accent-sky">I</div>
+            </div>
+            <span class="text-xs sm:text-sm font-medium text-gray-700"><strong class="text-brand-700">2,400+</strong> elevi activi</span>
+          </div>
+          <div class="stat-glow flex items-center gap-2 sm:gap-2.5 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-white/80">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-accent-warm" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+            </svg>
+            <span class="text-xs sm:text-sm font-medium text-gray-700"><strong class="text-brand-700">4.9/5</strong> rating</span>
+          </div>
+          <div class="stat-glow flex items-center gap-2 sm:gap-2.5 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-white/80">
+            <svg class="w-4 h-4 sm:w-5 sm:h-5 text-brand-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span class="text-xs sm:text-sm font-medium text-gray-700"><strong class="text-brand-700">15,000+</strong> simulări finalizate</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Decorative blobs -->
+    <div class="absolute top-20 left-10 w-64 h-64 rounded-full bg-brand-200/20 blur-3xl"></div>
+    <div class="absolute bottom-10 right-10 w-80 h-80 rounded-full bg-accent-sky/10 blur-3xl"></div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="py-14 sm:py-20 lg:py-28 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-2xl mx-auto mb-10 sm:mb-16">
+        <span class="inline-block text-xs sm:text-sm font-semibold text-brand-600 uppercase tracking-wider mb-3">Funcționalități</span>
+        <h2 class="font-display text-2xl sm:text-3xl lg:text-4xl text-brand-950 mb-3 sm:mb-4" style="letter-spacing: -0.03em;">Tot ce ai nevoie pentru succes</h2>
+        <p class="text-gray-500 text-base sm:text-lg" style="line-height: 1.7;">Platforma noastră oferă instrumente complete pentru pregătirea Evaluării Naționale.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+        <!-- Feature 1 -->
+        <div class="fade-in-up card-elevated rounded-2xl p-5 sm:p-7 bg-white border border-surface-200/60 spring-hover group">
+          <div class="w-12 h-12 rounded-xl bg-brand-50 flex items-center justify-center mb-5 group-hover:bg-brand-100 transition-colors duration-300">
+            <svg class="w-6 h-6 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 class="font-display text-xl text-brand-900 mb-2">Simulări realiste</h3>
+          <p class="text-gray-500 leading-relaxed" style="line-height: 1.7;">Exerciții care reproduc formatul, timing-ul și structura exactă a examenului de Evaluare Națională.</p>
+        </div>
+
+        <!-- Feature 2 -->
+        <div class="fade-in-up card-elevated rounded-2xl p-5 sm:p-7 bg-white border border-surface-200/60 spring-hover group" style="transition-delay: 0.1s">
+          <div class="w-12 h-12 rounded-xl bg-accent-warmLight flex items-center justify-center mb-5 group-hover:bg-orange-100 transition-colors duration-300">
+            <svg class="w-6 h-6 text-accent-warm" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 class="font-display text-xl text-brand-900 mb-2">Corectare instantanee</h3>
+          <p class="text-gray-500 leading-relaxed" style="line-height: 1.7;">Primești nota și feedback detaliat imediat după finalizarea fiecărei simulări.</p>
+        </div>
+
+        <!-- Feature 3 -->
+        <div class="fade-in-up card-elevated rounded-2xl p-5 sm:p-7 bg-white border border-surface-200/60 spring-hover group" style="transition-delay: 0.2s">
+          <div class="w-12 h-12 rounded-xl bg-accent-skyLight flex items-center justify-center mb-5 group-hover:bg-sky-100 transition-colors duration-300">
+            <svg class="w-6 h-6 text-accent-sky" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+            </svg>
+          </div>
+          <h3 class="font-display text-xl text-brand-900 mb-2">Statistici detaliate</h3>
+          <p class="text-gray-500 leading-relaxed" style="line-height: 1.7;">Urmărește-ți progresul în timp cu grafice clare și insight-uri personalizate.</p>
+        </div>
+
+        <!-- Feature 4 -->
+        <div class="fade-in-up card-elevated rounded-2xl p-5 sm:p-7 bg-white border border-surface-200/60 spring-hover group">
+          <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center mb-5 group-hover:bg-purple-100 transition-colors duration-300">
+            <svg class="w-6 h-6 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
+            </svg>
+          </div>
+          <h3 class="font-display text-xl text-brand-900 mb-2">Teste personalizate</h3>
+          <p class="text-gray-500 leading-relaxed" style="line-height: 1.7;">Generează teste focusate pe punctele tale slabe, pentru o pregătire eficientă și țintită.</p>
+        </div>
+
+        <!-- Feature 5 -->
+        <div class="fade-in-up card-elevated rounded-2xl p-5 sm:p-7 bg-white border border-surface-200/60 spring-hover group" style="transition-delay: 0.1s">
+          <div class="w-12 h-12 rounded-xl bg-rose-50 flex items-center justify-center mb-5 group-hover:bg-rose-100 transition-colors duration-300">
+            <svg class="w-6 h-6 text-rose-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 18.75h-9m9 0a3 3 0 013 3h-15a3 3 0 013-3m9 0v-3.375c0-.621-.503-1.125-1.125-1.125h-.871M7.5 18.75v-3.375c0-.621.504-1.125 1.125-1.125h.872m5.007 0H9.497m5.007 0a7.454 7.454 0 01-.982-3.172M9.497 14.25a7.454 7.454 0 00.981-3.172M5.25 4.236c-.982.143-1.954.317-2.916.52A6.003 6.003 0 007.73 9.728M5.25 4.236V4.5c0 2.108.966 3.99 2.48 5.228M5.25 4.236V2.721C7.456 2.41 9.71 2.25 12 2.25c2.291 0 4.545.16 6.75.47v1.516M18.75 4.236c.982.143 1.954.317 2.916.52A6.003 6.003 0 0016.27 9.728M18.75 4.236V4.5c0 2.108-.966 3.99-2.48 5.228m0 0a6.023 6.023 0 01-3.77 1.022 6.023 6.023 0 01-3.77-1.022" />
+            </svg>
+          </div>
+          <h3 class="font-display text-xl text-brand-900 mb-2">Clasament & motivație</h3>
+          <p class="text-gray-500 leading-relaxed" style="line-height: 1.7;">Compară-te cu alți elevi pe clasamentul național și menține motivația ridicată.</p>
+        </div>
+
+        <!-- Feature 6 -->
+        <div class="fade-in-up card-elevated rounded-2xl p-5 sm:p-7 bg-white border border-surface-200/60 spring-hover group" style="transition-delay: 0.2s">
+          <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center mb-5 group-hover:bg-emerald-100 transition-colors duration-300">
+            <svg class="w-6 h-6 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+            </svg>
+          </div>
+          <h3 class="font-display text-xl text-brand-900 mb-2">Notificări & remindere</h3>
+          <p class="text-gray-500 leading-relaxed" style="line-height: 1.7;">Primești remindere pentru sesiunile de practică și notificări despre simulări noi.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section id="how-it-works" class="py-14 sm:py-20 lg:py-28 relative grain bg-surface-50 overflow-hidden">
+    <div class="absolute inset-0 bg-gradient-to-b from-white via-transparent to-white opacity-50"></div>
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-2xl mx-auto mb-10 sm:mb-16">
+        <span class="inline-block text-xs sm:text-sm font-semibold text-brand-600 uppercase tracking-wider mb-3">Cum funcționează</span>
+        <h2 class="font-display text-2xl sm:text-3xl lg:text-4xl text-brand-950 mb-3 sm:mb-4" style="letter-spacing: -0.03em;">Trei pași simpli</h2>
+        <p class="text-gray-500 text-base sm:text-lg" style="line-height: 1.7;">Începe pregătirea în doar câteva minute.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-8 lg:gap-12">
+        <!-- Step 1 -->
+        <div class="fade-in-up text-center">
+          <div class="relative inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-brand-500 mb-6 card-floating">
+            <span class="font-display text-3xl text-white">1</span>
+            <div class="absolute -right-4 top-1/2 -translate-y-1/2 hidden md:block">
+              <svg class="w-8 h-8 text-brand-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </div>
+          </div>
+          <h3 class="font-display text-xl text-brand-900 mb-3">Creează contul</h3>
+          <p class="text-gray-500 leading-relaxed" style="line-height: 1.7;">Înregistrează-te gratuit cu email-ul tău. Durează sub 30 de secunde.</p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="fade-in-up text-center" style="transition-delay: 0.15s">
+          <div class="relative inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-accent-warm mb-6 card-floating">
+            <span class="font-display text-3xl text-white">2</span>
+            <div class="absolute -right-4 top-1/2 -translate-y-1/2 hidden md:block">
+              <svg class="w-8 h-8 text-brand-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+              </svg>
+            </div>
+          </div>
+          <h3 class="font-display text-xl text-brand-900 mb-3">Alege simularea</h3>
+          <p class="text-gray-500 leading-relaxed" style="line-height: 1.7;">Selectează materia și nivelul de dificultate. Ai sute de variante disponibile.</p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="fade-in-up text-center" style="transition-delay: 0.3s">
+          <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-accent-sky mb-6 card-floating">
+            <span class="font-display text-3xl text-white">3</span>
+          </div>
+          <h3 class="font-display text-xl text-brand-900 mb-3">Vezi rezultatele</h3>
+          <p class="text-gray-500 leading-relaxed" style="line-height: 1.7;">Primești nota, feedback detaliat și recomandări personalizate instant.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Subjects Section -->
+  <section id="subjects" class="py-14 sm:py-20 lg:py-28 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-2xl mx-auto mb-10 sm:mb-16">
+        <span class="inline-block text-xs sm:text-sm font-semibold text-brand-600 uppercase tracking-wider mb-3">Materii</span>
+        <h2 class="font-display text-2xl sm:text-3xl lg:text-4xl text-brand-950 mb-3 sm:mb-4" style="letter-spacing: -0.03em;">Pregătire completă</h2>
+        <p class="text-gray-500 text-base sm:text-lg" style="line-height: 1.7;">Acoperim toate materiile din cadrul Evaluării Naționale.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
+        <!-- Mathematics -->
+        <div class="fade-in-up card-floating rounded-3xl overflow-hidden bg-white border border-surface-200/60 group">
+          <div class="relative h-40 sm:h-48 overflow-hidden">
+            <img src="https://placehold.co/600x300/276c4f/ffffff?text=Matematică" alt="Matematică" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" style="transform-origin: center;">
+            <div class="absolute inset-0 bg-gradient-to-t from-brand-900/70 via-brand-900/20 to-transparent"></div>
+            <div class="absolute inset-0 bg-brand-600/10 mix-blend-multiply"></div>
+            <div class="absolute bottom-4 left-6">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-sm font-medium">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25V13.5zm0 2.25h.008v.008H8.25v-.008zm0 2.25h.008v.008H8.25V18zm2.498-6.75h.007v.008h-.007v-.008zm0 2.25h.007v.008h-.007V13.5zm0 2.25h.007v.008h-.007v-.008zm0 2.25h.007v.008h-.007V18zm2.504-6.75h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V13.5zm0 2.25h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V18zm2.498-6.75h.008v.008h-.008v-.008zm0 2.25h.008v.008h-.008V13.5zM8.25 6h7.5v2.25h-7.5V6zM12 2.25c-1.892 0-3.758.11-5.593.322C5.307 2.7 4.5 3.65 4.5 4.757V19.5a2.25 2.25 0 002.25 2.25h10.5a2.25 2.25 0 002.25-2.25V4.757c0-1.108-.806-2.057-1.907-2.185A48.507 48.507 0 0012 2.25z" />
+                </svg>
+                450+ exerciții
+              </span>
+            </div>
+          </div>
+          <div class="p-5 sm:p-6">
+            <h3 class="font-display text-2xl text-brand-900 mb-2">Matematică</h3>
+            <p class="text-gray-500 mb-5" style="line-height: 1.7;">Algebră, geometrie, analiză — toate capitolele acoperite cu exerciții pe nivele de dificultate.</p>
+            <div class="flex flex-wrap gap-2 mb-5">
+              <span class="px-3 py-1 rounded-lg bg-brand-50 text-brand-700 text-xs font-medium">Algebră</span>
+              <span class="px-3 py-1 rounded-lg bg-brand-50 text-brand-700 text-xs font-medium">Geometrie</span>
+              <span class="px-3 py-1 rounded-lg bg-brand-50 text-brand-700 text-xs font-medium">Analiză</span>
+              <span class="px-3 py-1 rounded-lg bg-brand-50 text-brand-700 text-xs font-medium">Probabilități</span>
+            </div>
+            <a href="/login.html#register" class="btn-primary block w-full py-3 text-sm font-semibold text-white bg-brand-500 rounded-xl hover:bg-brand-600 active:bg-brand-700 transition-colors duration-200 focus-visible:outline-none text-center">
+              Începe simularea
+            </a>
+          </div>
+        </div>
+
+        <!-- Romanian Language -->
+        <div class="fade-in-up card-floating rounded-3xl overflow-hidden bg-white border border-surface-200/60 group" style="transition-delay: 0.15s">
+          <div class="relative h-40 sm:h-48 overflow-hidden">
+            <img src="https://placehold.co/600x300/e8985e/ffffff?text=Limba+Română" alt="Limba Română" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" style="transform-origin: center;">
+            <div class="absolute inset-0 bg-gradient-to-t from-orange-900/70 via-orange-900/20 to-transparent"></div>
+            <div class="absolute inset-0 bg-accent-warm/10 mix-blend-multiply"></div>
+            <div class="absolute bottom-4 left-6">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-sm font-medium">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+                </svg>
+                380+ exerciții
+              </span>
+            </div>
+          </div>
+          <div class="p-5 sm:p-6">
+            <h3 class="font-display text-2xl text-brand-900 mb-2">Limba și literatura română</h3>
+            <p class="text-gray-500 mb-5" style="line-height: 1.7;">Înțelegerea textului, gramatică, compuneri — pregătire completă pentru ambele subiecte.</p>
+            <div class="flex flex-wrap gap-2 mb-5">
+              <span class="px-3 py-1 rounded-lg bg-accent-warmLight text-orange-700 text-xs font-medium">Gramatică</span>
+              <span class="px-3 py-1 rounded-lg bg-accent-warmLight text-orange-700 text-xs font-medium">Compunere</span>
+              <span class="px-3 py-1 rounded-lg bg-accent-warmLight text-orange-700 text-xs font-medium">Înțelegere text</span>
+              <span class="px-3 py-1 rounded-lg bg-accent-warmLight text-orange-700 text-xs font-medium">Vocabular</span>
+            </div>
+            <a href="/login.html#register" class="btn-primary block w-full py-3 text-sm font-semibold text-white bg-accent-warm rounded-xl hover:bg-orange-500 active:bg-orange-600 transition-colors duration-200 focus-visible:outline-none text-center">
+              Începe simularea
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dashboard Preview Section -->
+  <section id="dashboard-preview" class="py-14 sm:py-20 lg:py-28 relative grain bg-brand-950 overflow-hidden">
+    <div class="absolute inset-0">
+      <div class="absolute top-0 left-1/4 w-96 h-96 rounded-full bg-brand-500/10 blur-3xl"></div>
+      <div class="absolute bottom-0 right-1/4 w-80 h-80 rounded-full bg-accent-sky/10 blur-3xl"></div>
+    </div>
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-2xl mx-auto mb-10 sm:mb-16">
+        <span class="inline-block text-xs sm:text-sm font-semibold text-brand-400 uppercase tracking-wider mb-3">Dashboard</span>
+        <h2 class="font-display text-2xl sm:text-3xl lg:text-4xl text-white mb-3 sm:mb-4" style="letter-spacing: -0.03em;">Totul la un click distanță</h2>
+        <p class="text-brand-200/80 text-base sm:text-lg" style="line-height: 1.7;">Urmărește progresul, analizează performanța și primește recomandări personalizate.</p>
+      </div>
+
+      <!-- Mock Dashboard -->
+      <div class="fade-in-up max-w-5xl mx-auto">
+        <div class="rounded-2xl bg-white/[0.07] backdrop-blur-xl border border-white/10 p-3 sm:p-4 lg:p-6">
+          <!-- Dashboard Header -->
+          <div class="flex items-center justify-between mb-4 sm:mb-6">
+            <div class="flex items-center gap-2.5 sm:gap-3">
+              <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-brand-500 flex items-center justify-center text-white font-bold text-xs sm:text-sm">AM</div>
+              <div>
+                <p class="text-white font-semibold text-xs sm:text-sm">Ana Maria</p>
+                <p class="text-brand-300/60 text-[10px] sm:text-xs">Clasa a VIII-a</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-brand-500/20 text-brand-300 text-[10px] sm:text-xs font-medium">🔥 12 zile consecutiv</span>
+            </div>
+          </div>
+
+          <!-- Stats Cards -->
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-6">
+            <div class="rounded-xl bg-white/[0.06] border border-white/[0.08] p-3 sm:p-4">
+              <p class="text-brand-300/60 text-[10px] sm:text-xs mb-1">Simulări complete</p>
+              <p class="text-xl sm:text-2xl font-bold text-white">47</p>
+              <p class="text-brand-400 text-[10px] sm:text-xs mt-1">+5 săpt. asta</p>
+            </div>
+            <div class="rounded-xl bg-white/[0.06] border border-white/[0.08] p-3 sm:p-4">
+              <p class="text-brand-300/60 text-[10px] sm:text-xs mb-1">Media generală</p>
+              <p class="text-xl sm:text-2xl font-bold text-white">8.75</p>
+              <p class="text-brand-400 text-[10px] sm:text-xs mt-1">↑ 0.35 vs luna trec.</p>
+            </div>
+            <div class="rounded-xl bg-white/[0.06] border border-white/[0.08] p-3 sm:p-4">
+              <p class="text-brand-300/60 text-[10px] sm:text-xs mb-1">Cea mai bună notă</p>
+              <p class="text-xl sm:text-2xl font-bold text-accent-warm">9.80</p>
+              <p class="text-brand-300/50 text-[10px] sm:text-xs mt-1">Matematică — 15 mar</p>
+            </div>
+            <div class="rounded-xl bg-white/[0.06] border border-white/[0.08] p-3 sm:p-4">
+              <p class="text-brand-300/60 text-[10px] sm:text-xs mb-1">Poziție clasament</p>
+              <p class="text-xl sm:text-2xl font-bold text-white">#23</p>
+              <p class="text-brand-400 text-[10px] sm:text-xs mt-1">Top 5% național</p>
+            </div>
+          </div>
+
+          <!-- Progress Bars -->
+          <div class="rounded-xl bg-white/[0.06] border border-white/[0.08] p-3.5 sm:p-5">
+            <p class="text-white font-semibold text-xs sm:text-sm mb-3 sm:mb-4">Progres pe materii</p>
+            <div class="space-y-4">
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-brand-200/80 text-xs sm:text-sm">Matematică — Algebră</span>
+                  <span class="text-brand-300 text-xs sm:text-sm font-medium">85%</span>
+                </div>
+                <div class="h-2 rounded-full bg-white/[0.08]">
+                  <div class="progress-animate h-full rounded-full bg-gradient-to-r from-brand-400 to-brand-500" style="width: 85%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-brand-200/80 text-xs sm:text-sm">Matematică — Geometrie</span>
+                  <span class="text-brand-300 text-xs sm:text-sm font-medium">62%</span>
+                </div>
+                <div class="h-2 rounded-full bg-white/[0.08]">
+                  <div class="progress-animate h-full rounded-full bg-gradient-to-r from-accent-sky to-blue-400" style="width: 62%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-brand-200/80 text-xs sm:text-sm">Limba Română — Gramatică</span>
+                  <span class="text-brand-300 text-xs sm:text-sm font-medium">78%</span>
+                </div>
+                <div class="h-2 rounded-full bg-white/[0.08]">
+                  <div class="progress-animate h-full rounded-full bg-gradient-to-r from-accent-warm to-orange-400" style="width: 78%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <span class="text-brand-200/80 text-xs sm:text-sm">Limba Română — Compunere</span>
+                  <span class="text-brand-300 text-xs sm:text-sm font-medium">71%</span>
+                </div>
+                <div class="h-2 rounded-full bg-white/[0.08]">
+                  <div class="progress-animate h-full rounded-full bg-gradient-to-r from-purple-400 to-purple-500" style="width: 71%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Testimonials Section -->
+  <section id="testimonials" class="py-14 sm:py-20 lg:py-28 bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-2xl mx-auto mb-10 sm:mb-16">
+        <span class="inline-block text-xs sm:text-sm font-semibold text-brand-600 uppercase tracking-wider mb-3">Testimoniale</span>
+        <h2 class="font-display text-2xl sm:text-3xl lg:text-4xl text-brand-950 mb-3 sm:mb-4" style="letter-spacing: -0.03em;">Ce spun elevii noștri</h2>
+        <p class="text-gray-500 text-base sm:text-lg" style="line-height: 1.7;">Mii de elevi au obținut rezultate excelente cu EvalPrep.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
+        <!-- Testimonial 1 -->
+        <div class="fade-in-up card-elevated rounded-2xl p-5 sm:p-7 bg-white border border-surface-200/60">
+          <div class="flex items-center gap-1 mb-4">
+            <svg class="w-4 h-4 text-accent-warm" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-4 h-4 text-accent-warm" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-4 h-4 text-accent-warm" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-4 h-4 text-accent-warm" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-4 h-4 text-accent-warm" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          </div>
+          <p class="text-gray-600 mb-5 italic" style="line-height: 1.7;">"Am folosit EvalPrep timp de 3 luni și nota mea la matematică a crescut de la 7.20 la 9.45. Simulările sunt foarte asemănătoare cu examenul real!"</p>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-brand-100 flex items-center justify-center text-sm font-bold text-brand-700">AD</div>
+            <div>
+              <p class="text-sm font-semibold text-gray-800">Andrei D.</p>
+              <p class="text-xs text-gray-400">Clasa a VIII-a, București</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Testimonial 2 -->
+        <div class="fade-in-up card-elevated rounded-2xl p-5 sm:p-7 bg-white border border-surface-200/60" style="transition-delay: 0.1s">
+          <div class="flex items-center gap-1 mb-4">
+            <svg class="w-4 h-4 text-accent-warm" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-4 h-4 text-accent-warm" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-4 h-4 text-accent-warm" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-4 h-4 text-accent-warm" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-4 h-4 text-accent-warm" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          </div>
+          <p class="text-gray-600 mb-5 italic" style="line-height: 1.7;">"Cel mai bun lucru este feedback-ul detaliat. La fiecare greșeală primesc explicația completă, exact ca la meditații dar disponibil oricând."</p>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-accent-warmLight flex items-center justify-center text-sm font-bold text-accent-warm">MI</div>
+            <div>
+              <p class="text-sm font-semibold text-gray-800">Maria I.</p>
+              <p class="text-xs text-gray-400">Clasa a VIII-a, Cluj-Napoca</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Testimonial 3 -->
+        <div class="fade-in-up card-elevated rounded-2xl p-5 sm:p-7 bg-white border border-surface-200/60" style="transition-delay: 0.2s">
+          <div class="flex items-center gap-1 mb-4">
+            <svg class="w-4 h-4 text-accent-warm" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-4 h-4 text-accent-warm" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-4 h-4 text-accent-warm" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-4 h-4 text-accent-warm" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+            <svg class="w-4 h-4 text-accent-warm" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+          </div>
+          <p class="text-gray-600 mb-5 italic" style="line-height: 1.7;">"Ca părinte, apreciez că pot vedea progresul copilului meu. Clasamentul îl motivează să exerseze zilnic. Recomand cu încredere!"</p>
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-accent-skyLight flex items-center justify-center text-sm font-bold text-accent-sky">EP</div>
+            <div>
+              <p class="text-sm font-semibold text-gray-800">Elena P.</p>
+              <p class="text-xs text-gray-400">Părinte, Timișoara</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pricing Section -->
+  <section id="pricing" class="py-14 sm:py-20 lg:py-28 relative grain bg-surface-50 overflow-hidden">
+    <div class="absolute inset-0">
+      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-brand-100/30 blur-3xl"></div>
+    </div>
+    <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-2xl mx-auto mb-10 sm:mb-16">
+        <span class="inline-block text-xs sm:text-sm font-semibold text-brand-600 uppercase tracking-wider mb-3">Prețuri</span>
+        <h2 class="font-display text-2xl sm:text-3xl lg:text-4xl text-brand-950 mb-3 sm:mb-4" style="letter-spacing: -0.03em;">Alege planul potrivit</h2>
+        <p class="text-gray-500 text-base sm:text-lg" style="line-height: 1.7;">Începe gratuit, upgradează când ești gata.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 max-w-5xl mx-auto">
+        <!-- Free Plan -->
+        <div class="fade-in-up card-elevated rounded-2xl p-5 sm:p-7 bg-white border border-surface-200/60">
+          <div class="mb-6">
+            <h3 class="font-display text-xl text-brand-900 mb-2">Gratuit</h3>
+            <div class="flex items-baseline gap-1">
+              <span class="text-4xl font-bold text-brand-950">0</span>
+              <span class="text-gray-400 text-lg">lei</span>
+            </div>
+            <p class="text-gray-400 text-sm mt-2">Pentru a testa platforma</p>
+          </div>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-start gap-2.5">
+              <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+              <span class="text-gray-600 text-sm">3 simulări / lună</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+              <span class="text-gray-600 text-sm">Corectare instantanee</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+              <span class="text-gray-600 text-sm">Statistici de bază</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <svg class="w-5 h-5 text-surface-300 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              <span class="text-gray-400 text-sm">Teste personalizate</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <svg class="w-5 h-5 text-surface-300 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              <span class="text-gray-400 text-sm">Clasament</span>
+            </li>
+          </ul>
+          <a href="/login.html#register" class="btn-secondary block w-full py-3 text-sm font-semibold text-brand-700 border border-brand-200 rounded-xl hover:bg-brand-50 active:bg-brand-100 transition-colors duration-200 focus-visible:outline-none text-center">
+            Începe gratuit
+          </a>
+        </div>
+
+        <!-- Standard Plan -->
+        <div class="fade-in-up relative card-floating rounded-2xl p-5 sm:p-7 bg-white border-2 border-brand-500 sm:col-span-2 md:col-span-1" style="transition-delay: 0.1s">
+          <div class="absolute -top-3.5 left-1/2 -translate-x-1/2">
+            <span class="px-4 py-1 rounded-full bg-brand-500 text-white text-xs font-semibold">Cel mai popular</span>
+          </div>
+          <div class="mb-6">
+            <h3 class="font-display text-xl text-brand-900 mb-2">Standard</h3>
+            <div class="flex items-baseline gap-1">
+              <span class="text-4xl font-bold text-brand-950">49</span>
+              <span class="text-gray-400 text-lg">lei / lună</span>
+            </div>
+            <p class="text-gray-400 text-sm mt-2">Pentru pregătire serioasă</p>
+          </div>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-start gap-2.5">
+              <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+              <span class="text-gray-600 text-sm">Simulări nelimitate</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+              <span class="text-gray-600 text-sm">Feedback detaliat cu explicații</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+              <span class="text-gray-600 text-sm">Statistici avansate</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+              <span class="text-gray-600 text-sm">Teste personalizate</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+              <span class="text-gray-600 text-sm">Clasament național</span>
+            </li>
+          </ul>
+          <a href="/login.html#register" class="btn-primary block w-full py-3 text-sm font-semibold text-white bg-brand-500 rounded-xl hover:bg-brand-600 active:bg-brand-700 transition-colors duration-200 focus-visible:outline-none text-center">
+            Alege Standard
+          </a>
+        </div>
+
+        <!-- Premium Plan -->
+        <div class="fade-in-up card-elevated rounded-2xl p-5 sm:p-7 bg-white border border-surface-200/60" style="transition-delay: 0.2s">
+          <div class="mb-6">
+            <h3 class="font-display text-xl text-brand-900 mb-2">Premium</h3>
+            <div class="flex items-baseline gap-1">
+              <span class="text-4xl font-bold text-brand-950">89</span>
+              <span class="text-gray-400 text-lg">lei / lună</span>
+            </div>
+            <p class="text-gray-400 text-sm mt-2">Pregătire maximă cu mentor</p>
+          </div>
+          <ul class="space-y-3 mb-8">
+            <li class="flex items-start gap-2.5">
+              <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+              <span class="text-gray-600 text-sm">Tot ce include Standard</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+              <span class="text-gray-600 text-sm">Recomandări AI personalizate</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+              <span class="text-gray-600 text-sm">Plan de studiu săptămânal</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+              <span class="text-gray-600 text-sm">Raport pentru părinți</span>
+            </li>
+            <li class="flex items-start gap-2.5">
+              <svg class="w-5 h-5 text-brand-500 mt-0.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>
+              <span class="text-gray-600 text-sm">Suport prioritar</span>
+            </li>
+          </ul>
+          <a href="/login.html#register" class="btn-secondary block w-full py-3 text-sm font-semibold text-brand-700 border border-brand-200 rounded-xl hover:bg-brand-50 active:bg-brand-100 transition-colors duration-200 focus-visible:outline-none text-center">
+            Alege Premium
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-14 sm:py-20 lg:py-28 bg-white">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <div class="fade-in-up card-floating rounded-2xl sm:rounded-3xl p-6 sm:p-10 lg:p-16 relative overflow-hidden grain" style="background: linear-gradient(135deg, #205741 0%, #183a2d 50%, #0c2019 100%);">
+        <div class="absolute top-0 right-0 w-64 h-64 rounded-full bg-brand-400/10 blur-3xl"></div>
+        <div class="absolute bottom-0 left-0 w-48 h-48 rounded-full bg-accent-warm/10 blur-3xl"></div>
+        <div class="relative z-10">
+          <h2 class="font-display text-2xl sm:text-3xl lg:text-4xl text-white mb-3 sm:mb-4" style="letter-spacing: -0.03em;">Ești gata să începi?</h2>
+          <p class="text-brand-200/80 text-base sm:text-lg mb-6 sm:mb-8 max-w-xl mx-auto" style="line-height: 1.7;">Alătură-te celor peste 2,400 de elevi care se pregătesc activ cu EvalPrep. Prima simulare este gratuită.</p>
+          <div class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
+            <a href="/login.html#register" class="btn-primary w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 text-sm sm:text-base font-semibold text-brand-900 bg-white rounded-2xl hover:bg-brand-50 active:bg-brand-100 transition-colors duration-200 spring-hover focus-visible:outline-none text-center">
+              Creează cont gratuit
+            </a>
+            <a href="https://wa.me/40771241293" target="_blank" rel="noopener" class="btn-secondary w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 text-sm sm:text-base font-semibold text-white border border-white/20 rounded-2xl hover:bg-white/10 active:bg-white/5 transition-colors duration-200 spring-hover focus-visible:outline-none text-center">
+              Contactează-ne
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-10 sm:py-12 lg:py-16 bg-brand-950 text-brand-200/70">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 lg:gap-12 mb-10 sm:mb-12">
+        <!-- Brand -->
+        <div class="col-span-2 md:col-span-1">
+          <a href="#" class="flex items-center gap-2.5 mb-4">
+            <div class="w-9 h-9 rounded-xl bg-brand-500 flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+              </svg>
+            </div>
+            <span class="font-display text-xl text-white">EvalPrep</span>
+          </a>
+          <p class="text-sm leading-relaxed" style="line-height: 1.7;">Platforma de pregătire pentru Evaluarea Națională. Ajutăm elevii să obțină rezultate excelente.</p>
+        </div>
+
+        <!-- Links -->
+        <div>
+          <h4 class="font-semibold text-white text-sm mb-4">Platformă</h4>
+          <ul class="space-y-2.5">
+            <li><a href="#" class="text-sm hover:text-white transition-colors duration-200 focus-visible:outline-none focus-visible:underline">Simulări</a></li>
+            <li><a href="#" class="text-sm hover:text-white transition-colors duration-200 focus-visible:outline-none focus-visible:underline">Dashboard</a></li>
+            <li><a href="#" class="text-sm hover:text-white transition-colors duration-200 focus-visible:outline-none focus-visible:underline">Clasament</a></li>
+            <li><a href="#" class="text-sm hover:text-white transition-colors duration-200 focus-visible:outline-none focus-visible:underline">Prețuri</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold text-white text-sm mb-4">Resurse</h4>
+          <ul class="space-y-2.5">
+            <li><a href="#" class="text-sm hover:text-white transition-colors duration-200 focus-visible:outline-none focus-visible:underline">Blog</a></li>
+            <li><a href="#" class="text-sm hover:text-white transition-colors duration-200 focus-visible:outline-none focus-visible:underline">Sfaturi pentru examen</a></li>
+            <li><a href="#" class="text-sm hover:text-white transition-colors duration-200 focus-visible:outline-none focus-visible:underline">FAQ</a></li>
+            <li><a href="#" class="text-sm hover:text-white transition-colors duration-200 focus-visible:outline-none focus-visible:underline">Suport</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-semibold text-white text-sm mb-4">Legal</h4>
+          <ul class="space-y-2.5">
+            <li><a href="#" class="text-sm hover:text-white transition-colors duration-200 focus-visible:outline-none focus-visible:underline">Termeni și condiții</a></li>
+            <li><a href="#" class="text-sm hover:text-white transition-colors duration-200 focus-visible:outline-none focus-visible:underline">Politica de confidențialitate</a></li>
+            <li><a href="#" class="text-sm hover:text-white transition-colors duration-200 focus-visible:outline-none focus-visible:underline">GDPR</a></li>
+            <li><a href="#" class="text-sm hover:text-white transition-colors duration-200 focus-visible:outline-none focus-visible:underline">Cookies</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="border-t border-white/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <p class="text-sm">&copy; 2026 EvalPrep. Toate drepturile rezervate.</p>
+        <div class="flex items-center gap-4">
+          <a href="#" class="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40" aria-label="Facebook">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          </a>
+          <a href="#" class="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40" aria-label="Instagram">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.315 2c2.43 0 2.784.013 3.808.06 1.064.049 1.791.218 2.427.465a4.902 4.902 0 011.772 1.153 4.902 4.902 0 011.153 1.772c.247.636.416 1.363.465 2.427.048 1.067.06 1.407.06 4.123v.08c0 2.643-.012 2.987-.06 4.043-.049 1.064-.218 1.791-.465 2.427a4.902 4.902 0 01-1.153 1.772 4.902 4.902 0 01-1.772 1.153c-.636.247-1.363.416-2.427.465-1.067.048-1.407.06-4.123.06h-.08c-2.643 0-2.987-.012-4.043-.06-1.064-.049-1.791-.218-2.427-.465a4.902 4.902 0 01-1.772-1.153 4.902 4.902 0 01-1.153-1.772c-.247-.636-.416-1.363-.465-2.427-.047-1.024-.06-1.379-.06-3.808v-.63c0-2.43.013-2.784.06-3.808.049-1.064.218-1.791.465-2.427a4.902 4.902 0 011.153-1.772A4.902 4.902 0 015.45 2.525c.636-.247 1.363-.416 2.427-.465C8.901 2.013 9.256 2 11.685 2h.63zm-.081 1.802h-.468c-2.456 0-2.784.011-3.807.058-.975.045-1.504.207-1.857.344-.467.182-.8.398-1.15.748-.35.35-.566.683-.748 1.15-.137.353-.3.882-.344 1.857-.047 1.023-.058 1.351-.058 3.807v.468c0 2.456.011 2.784.058 3.807.045.975.207 1.504.344 1.857.182.466.399.8.748 1.15.35.35.683.566 1.15.748.353.137.882.3 1.857.344 1.054.048 1.37.058 4.041.058h.08c2.597 0 2.917-.01 3.96-.058.976-.045 1.505-.207 1.858-.344.466-.182.8-.398 1.15-.748.35-.35.566-.683.748-1.15.137-.353.3-.882.344-1.857.048-1.055.058-1.37.058-4.041v-.08c0-2.597-.01-2.917-.058-3.96-.045-.976-.207-1.505-.344-1.858a3.097 3.097 0 00-.748-1.15 3.098 3.098 0 00-1.15-.748c-.353-.137-.882-.3-1.857-.344-1.023-.047-1.351-.058-3.807-.058zM12 6.865a5.135 5.135 0 110 10.27 5.135 5.135 0 010-10.27zm0 1.802a3.333 3.333 0 100 6.666 3.333 3.333 0 000-6.666zm5.338-3.205a1.2 1.2 0 110 2.4 1.2 1.2 0 010-2.4z"/></svg>
+          </a>
+          <a href="#" class="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center hover:bg-white/10 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40" aria-label="TikTok">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- WhatsApp Floating Button -->
+  <a href="https://wa.me/40771241293" target="_blank" rel="noopener"
+     class="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center spring-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-green-300/50"
+     style="background: #25D366; box-shadow: 0 4px 14px rgba(37, 211, 102, 0.4), 0 2px 6px rgba(0,0,0,0.1);"
+     aria-label="Chat pe WhatsApp">
+    <svg class="w-6 h-6 sm:w-7 sm:h-7 text-white" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+    </svg>
+  </a>
+
+  <!-- Auth-aware nav (check if logged in and redirect CTA buttons) -->
+  <script>
+    (async function checkAuth() {
+      try {
+        const res = await fetch('/api/auth/me');
+        if (res.ok) {
+          const data = await res.json();
+          // User is logged in — update nav buttons
+          const navRight = document.querySelector('nav .hidden.lg\\:flex.items-center.gap-3');
+          if (navRight && data.user) {
+            const dashUrl = data.user.role === 'admin' ? '/admin.html' : '/dashboard.html';
+            navRight.innerHTML = `
+              <span class="text-sm text-gray-600">Salut, <strong class="text-brand-700">${data.user.name}</strong></span>
+              <a href="${dashUrl}" class="btn-primary px-5 py-2.5 text-sm font-semibold text-white bg-brand-500 rounded-xl hover:bg-brand-600 active:bg-brand-700 transition-colors duration-200 focus-visible:outline-none">
+                Dashboard
+              </a>
+            `;
+          }
+        }
+      } catch (e) { /* not logged in */ }
+    })();
+  </script>
+
+  <!-- JavaScript -->
+  <script>
+    // Dark mode
+    function updateDarkIcons(isDark) {
+      document.getElementById('sunIcon').classList.toggle('hidden', !isDark);
+      document.getElementById('moonIcon').classList.toggle('hidden', isDark);
+      document.getElementById('sunIconMobile').classList.toggle('hidden', !isDark);
+      document.getElementById('moonIconMobile').classList.toggle('hidden', isDark);
+    }
+    function toggleDarkMode() {
+      const isDark = document.documentElement.classList.toggle('dark');
+      localStorage.setItem('darkMode', isDark ? 'dark' : 'light');
+      updateDarkIcons(isDark);
+    }
+    // Initialize from localStorage or system preference
+    (function() {
+      const saved = localStorage.getItem('darkMode');
+      const isDark = saved === 'dark';
+      if (isDark) document.documentElement.classList.add('dark');
+      // Icons updated after DOM ready
+      document.addEventListener('DOMContentLoaded', () => updateDarkIcons(isDark));
+    })();
+
+    // Mobile menu toggle
+    function toggleMobileMenu() {
+      const menu = document.getElementById('mobileMenu');
+      menu.classList.toggle('open');
+    }
+
+    // Fade-in on scroll
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+    document.querySelectorAll('.fade-in-up').forEach(el => observer.observe(el));
+
+    // Smooth scroll for nav links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      });
+    });
+
+    // Navbar background on scroll
+    const nav = document.querySelector('nav');
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 10) {
+        nav.classList.add('shadow-sm');
+      } else {
+        nav.classList.remove('shadow-sm');
+      }
+    });
+  </script>
+</body>
+</html>

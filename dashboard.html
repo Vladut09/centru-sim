@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — EvalPrep</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: { 50:'#f0f7f4',100:'#d9ede2',200:'#b5dbc7',300:'#85c2a4',400:'#56a57e',500:'#368763',600:'#276c4f',700:'#205741',800:'#1c4635',900:'#183a2d',950:'#0c2019' },
+            surface: { 50:'#fafbfc',100:'#f3f5f7',200:'#e8ecf0',300:'#d5dbe3',400:'#a8b3c0' },
+            accent: { warm:'#e8985e',warmLight:'#fdf3eb',sky:'#4a9eca',skyLight:'#edf6fb' }
+          },
+          fontFamily: { display:['"DM Serif Display"','serif'], body:['"Inter"','sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { font-family: 'Inter', sans-serif; }
+    h1,h2,h3,.font-display { font-family: 'DM Serif Display', serif; }
+    .card-elevated { box-shadow: 0 1px 2px rgba(54,135,99,0.04), 0 4px 12px rgba(54,135,99,0.06), 0 12px 32px rgba(54,135,99,0.04); }
+    .card-floating { box-shadow: 0 2px 4px rgba(54,135,99,0.05), 0 8px 24px rgba(54,135,99,0.08), 0 24px 48px rgba(54,135,99,0.06); }
+    .spring-hover { transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s ease; }
+    .spring-hover:hover { transform: translateY(-3px); }
+    .spring-hover:active { transform: translateY(-1px); }
+    .btn-primary:focus-visible { outline:none; box-shadow:0 0 0 3px rgba(54,135,99,0.3),0 0 0 1px rgba(54,135,99,0.8); }
+    .nav-blur { backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+
+    .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 9999px; font-size: 12px; font-weight: 600; }
+    .status-in_progress { background: #edf6fb; color: #4a9eca; }
+    .status-uploading { background: #fdf3eb; color: #e8985e; }
+    .status-completed { background: #d9ede2; color: #276c4f; }
+    .status-expired { background: #fef2f2; color: #dc2626; }
+
+    .skeleton { background: linear-gradient(90deg, #f3f5f7 25%, #e8ecf0 50%, #f3f5f7 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  </style>
+</head>
+<body class="bg-surface-50 antialiased min-h-screen">
+
+  <!-- Navigation -->
+  <nav class="sticky top-0 z-50 nav-blur bg-white/80 border-b border-surface-200/60">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <a href="/" class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-brand-500 flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25" />
+            </svg>
+          </div>
+          <span class="font-display text-xl text-brand-800 tracking-tight">EvalPrep</span>
+        </a>
+        <div class="flex items-center gap-4">
+          <span id="navUserName" class="text-sm text-gray-600 hidden sm:block"></span>
+          <button onclick="logout()" class="px-4 py-2 text-sm font-medium text-gray-600 rounded-lg hover:text-red-600 hover:bg-red-50 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/30">
+            Deconectare
+          </button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
+    <!-- Loading skeleton -->
+    <div id="loading" class="space-y-6">
+      <div class="skeleton h-8 w-64"></div>
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="skeleton h-28 rounded-2xl"></div>
+        <div class="skeleton h-28 rounded-2xl"></div>
+        <div class="skeleton h-28 rounded-2xl"></div>
+      </div>
+      <div class="skeleton h-64 rounded-2xl"></div>
+    </div>
+
+    <!-- Dashboard Content (hidden until loaded) -->
+    <div id="content" class="hidden">
+      <!-- Welcome -->
+      <div class="mb-8">
+        <h1 class="font-display text-2xl lg:text-3xl text-brand-950 mb-1" style="letter-spacing:-0.03em;">
+          Salut, <span id="userName"></span>!
+        </h1>
+        <p class="text-gray-500">Continuă pregătirea pentru Evaluarea Națională.</p>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-10">
+        <div class="card-elevated rounded-2xl p-5 bg-white border border-surface-200/60">
+          <p class="text-sm text-gray-500 mb-1">Simulări începute</p>
+          <p id="statTotal" class="text-3xl font-bold text-brand-950">0</p>
+        </div>
+        <div class="card-elevated rounded-2xl p-5 bg-white border border-surface-200/60">
+          <p class="text-sm text-gray-500 mb-1">Lucrări trimise</p>
+          <p id="statCompleted" class="text-3xl font-bold text-brand-500">0</p>
+        </div>
+        <div class="card-elevated rounded-2xl p-5 bg-white border border-surface-200/60 sm:col-span-2 lg:col-span-1">
+          <p class="text-sm text-gray-500 mb-1">Membru din</p>
+          <p id="statMember" class="text-3xl font-bold text-accent-sky">—</p>
+        </div>
+      </div>
+
+      <!-- Available Simulations -->
+      <div class="mb-10">
+        <h2 class="font-display text-xl text-brand-950 mb-4">Simulări disponibile</h2>
+        <div id="simulations" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <!-- Filled by JS -->
+        </div>
+        <div id="noSimulations" class="hidden text-center py-12 text-gray-400">
+          <svg class="w-12 h-12 mx-auto mb-3 text-surface-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12H9.75m3 0H9.75m0 0v3.75m0-3.75H6.375a1.875 1.875 0 01-1.875-1.875V4.875c0-1.036.84-1.875 1.875-1.875h4.346c.498 0 .976.198 1.328.55l4.451 4.451c.352.352.55.83.55 1.328V16.5a1.875 1.875 0 01-1.875 1.875H9.75" />
+          </svg>
+          <p class="text-sm">Nicio simulare disponibilă momentan. Revino curând!</p>
+        </div>
+      </div>
+
+      <!-- Past Sessions -->
+      <div>
+        <h2 class="font-display text-xl text-brand-950 mb-4">Istoricul simulărilor</h2>
+        <div id="history" class="space-y-3">
+          <!-- Filled by JS -->
+        </div>
+        <div id="noHistory" class="hidden text-center py-12 text-gray-400">
+          <p class="text-sm">Nu ai început încă nicio simulare.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    const statusLabels = {
+      in_progress: 'În desfășurare',
+      uploading: 'Încărcare lucrare',
+      completed: 'Trimisă',
+      expired: 'Expirată'
+    };
+
+    const subjectColors = {
+      'Matematică': { bg: 'bg-brand-50', text: 'text-brand-700', border: 'border-brand-200' },
+      'Limba Română': { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200' },
+    };
+
+    function getSubjectStyle(subject) {
+      return subjectColors[subject] || { bg: 'bg-surface-100', text: 'text-gray-700', border: 'border-surface-300' };
+    }
+
+    async function logout() {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      window.location.href = '/';
+    }
+
+    function formatDate(dateStr) {
+      return new Date(dateStr).toLocaleDateString('ro-RO', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+
+    async function loadDashboard() {
+      try {
+        // Check auth
+        const authRes = await fetch('/api/auth/me');
+        if (!authRes.ok) { window.location.href = '/'; return; }
+        const authData = await authRes.json();
+
+        if (authData.user.role === 'admin') { window.location.href = '/admin.html'; return; }
+
+        document.getElementById('navUserName').textContent = `Salut, ${authData.user.name}`;
+
+        // Load dashboard data
+        const [dashRes, simsRes] = await Promise.all([
+          fetch('/api/dashboard'),
+          fetch('/api/simulations')
+        ]);
+
+        const dashData = await dashRes.json();
+        const simsData = await simsRes.json();
+
+        // Fill stats
+        document.getElementById('userName').textContent = dashData.user.name;
+        document.getElementById('statTotal').textContent = dashData.stats.totalSimulations;
+        document.getElementById('statCompleted').textContent = dashData.stats.completedSimulations;
+        document.getElementById('statMember').textContent = formatDate(dashData.user.created_at);
+
+        // Render simulations
+        const simsContainer = document.getElementById('simulations');
+        const noSims = document.getElementById('noSimulations');
+
+        if (simsData.simulations.length === 0) {
+          noSims.classList.remove('hidden');
+        } else {
+          simsData.simulations.forEach(sim => {
+            const style = getSubjectStyle(sim.subject);
+            const hasActive = sim.session && ['in_progress', 'uploading'].includes(sim.session.status);
+
+            simsContainer.innerHTML += `
+              <div class="card-elevated rounded-2xl p-5 bg-white border border-surface-200/60 spring-hover flex flex-col">
+                <div class="flex items-start justify-between mb-3">
+                  <span class="inline-block px-3 py-1 rounded-lg ${style.bg} ${style.text} text-xs font-semibold">${sim.subject}</span>
+                  ${sim.session ? `<span class="status-badge status-${sim.session.status}">${statusLabels[sim.session.status]}</span>` : ''}
+                </div>
+                <h3 class="font-semibold text-brand-900 mb-1">${sim.title}</h3>
+                <p class="text-gray-400 text-sm mb-4 flex-1">${sim.description || 'Simulare oficială'}</p>
+                ${hasActive
+                  ? `<a href="/simulation.html?id=${sim.id}" class="block w-full py-2.5 text-sm font-semibold text-white bg-accent-sky rounded-xl hover:bg-blue-500 transition-colors duration-200 text-center focus-visible:outline-none">Continuă simularea</a>`
+                  : `<a href="/simulation.html?id=${sim.id}" class="block w-full py-2.5 text-sm font-semibold text-white bg-brand-500 rounded-xl hover:bg-brand-600 transition-colors duration-200 text-center focus-visible:outline-none">Începe simularea</a>`
+                }
+              </div>
+            `;
+          });
+        }
+
+        // Render history
+        const historyContainer = document.getElementById('history');
+        const noHistory = document.getElementById('noHistory');
+
+        if (dashData.sessions.length === 0) {
+          noHistory.classList.remove('hidden');
+        } else {
+          dashData.sessions.forEach(sess => {
+            const imgCount = sess.images ? sess.images.length : 0;
+            historyContainer.innerHTML += `
+              <div class="card-elevated rounded-xl p-4 bg-white border border-surface-200/60 flex flex-col sm:flex-row sm:items-center gap-3">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 mb-1">
+                    <h4 class="font-semibold text-gray-800 text-sm truncate">${sess.simulation_title}</h4>
+                    <span class="status-badge status-${sess.status}">${statusLabels[sess.status]}</span>
+                  </div>
+                  <p class="text-xs text-gray-400">${sess.simulation_subject} — ${formatDate(sess.started_at)} — ${imgCount} ${imgCount === 1 ? 'imagine' : 'imagini'} încărcate</p>
+                </div>
+                ${['in_progress', 'uploading'].includes(sess.status)
+                  ? `<a href="/simulation.html?id=${sess.simulation_id}" class="shrink-0 px-4 py-2 text-xs font-semibold text-accent-sky bg-accent-skyLight rounded-lg hover:bg-sky-100 transition-colors">Continuă</a>`
+                  : ''
+                }
+              </div>
+            `;
+          });
+        }
+
+        // Show content
+        document.getElementById('loading').classList.add('hidden');
+        document.getElementById('content').classList.remove('hidden');
+
+      } catch (err) {
+        console.error(err);
+        window.location.href = '/';
+      }
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>
